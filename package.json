@@ -1,0 +1,16 @@
+{
+  "name": "dong-thanh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Game gõ chữ nhiều người: cùng gõ một từ, trùng là lên level.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}
