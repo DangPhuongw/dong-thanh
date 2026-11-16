@@ -486,7 +486,7 @@ const T = {
     modes: { coop2: ['Cặp đôi', '2 người cùng nhập'], vs22: ['Đấu đôi 2v2', 'Cặp nào nhập trùng trước thì thắng'], coop3: ['Bộ ba', '3 người cùng nhập'] },
     types: { free: ['Không chủ đề', 'Chế độ chính, nhập gì cũng được'], rand: ['Chủ đề ngẫu nhiên', 'Mỗi level một chủ đề chung'], turn: ['Luân phiên chọn', 'Mỗi vòng một người ra đề'] },
     lvtag: '⭐ 10 level · ❤️ 20 mạng', race: 'Đua tốc độ', searching: '{n} đang tìm',
-    connected: 'Đã kết nối', streamerTip: 'Chế độ streamer: che các từ bằng dấu *', connecting: 'Đang kết nối…', reconnecting: 'Đang nối lại…', offline: 'Ngoại tuyến',
+    connected: 'Đã kết nối', streamerTip: 'Chế độ streamer: che chữ trong ô nhập từ', connecting: 'Đang kết nối…', reconnecting: 'Đang nối lại…', offline: 'Ngoại tuyến',
     bannerWake: '<b>Đang kết nối máy chủ…</b> Nếu lâu không có ai chơi, máy chủ miễn phí cần khoảng 30 đến 60 giây để thức dậy.',
     qTitle: 'Đang tìm đồng đội…', cancel: 'Huỷ tìm',
     loadingRoom: 'Đang vào phòng…', codeLbl: 'Mã phòng', codeHint: 'Gửi mã này cho bạn bè để vào cùng phòng', copy: 'Sao chép mã',
@@ -507,7 +507,7 @@ const T = {
     upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Vượt qua Level 10!', hurtSub: '💔 -1 mạng · còn {h}', deadSub: '💀 Hết mạng!', missSub: 'Vòng sau bắt sóng lại!',
     nextIn: 'Vòng mới sau {s} giây',
     prepNote: 'Đặt tay lên bàn phím. Vòng đầu sẽ mở bằng từ ngẫu nhiên.', seedNote: 'Ghi nhớ các từ này. Vòng sau hãy nhập một từ liên quan tới tất cả.',
-    watchNote: 'Bạn đang xem trận này.', lockedNote: 'Đã chốt <b>{w}</b>. Đang chờ đồng đội…', linkNote: 'Nối <b>{a}</b> bằng một từ chung.', linkJoin: '</b> với <b>',
+    watchNote: 'Bạn đang xem trận này.', lockedNote: 'Đã chốt <b>{w}</b>. Đang chờ đồng đội…', lockedHidden: 'Đã chốt từ. Đang chờ đồng đội…', linkNote: 'Nối <b>{a}</b> bằng một từ chung.', linkJoin: '</b> với <b>',
     againNote: 'Nhìn các từ vòng trước, đoán xem đồng đội sẽ nhập gì.', missNote: 'Chưa trùng. Đồng hồ sẽ tự chạy lại sau vài giây, chuẩn bị nhập từ mới.',
     pickNote: 'Bạn ra đề vòng này. Nhập chủ đề hoặc chọn nhanh bên dưới.', sentTopic: 'Đã gửi đề…', waitPick: 'Chờ <b>{p}</b> ra đề. Hết 20 giây sẽ lấy đề ngẫu nhiên.',
     wordPh: 'Nhập từ của bạn…', lock: 'Chốt', topicPh: 'Chủ đề vòng này…', setTopic: 'Ra đề',
@@ -543,7 +543,7 @@ const T = {
     modes: { coop2: ['Duo', '2 players type together'], vs22: ['2v2 Battle', 'First pair to match wins'], coop3: ['Trio', '3 players type together'] },
     types: { free: ['No topic', 'Main mode, anything goes'], rand: ['Random topic', 'A shared topic each level'], turn: ['Take turns', 'Each round someone sets the topic'] },
     lvtag: '⭐ 10 levels · ❤️ 20 lives', race: 'Speed race', searching: '{n} searching',
-    connected: 'Connected', streamerTip: 'Streamer mode: hide words with *', connecting: 'Connecting…', reconnecting: 'Reconnecting…', offline: 'Offline',
+    connected: 'Connected', streamerTip: 'Streamer mode: hide the letters in the word box', connecting: 'Connecting…', reconnecting: 'Reconnecting…', offline: 'Offline',
     bannerWake: '<b>Connecting to the server…</b> If nobody has played for a while, the free server needs 30 to 60 seconds to wake up.',
     qTitle: 'Finding teammates…', cancel: 'Cancel',
     loadingRoom: 'Joining room…', codeLbl: 'Room code', codeHint: 'Send this code to friends so they can join', copy: 'Copy code',
@@ -564,7 +564,7 @@ const T = {
     upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Beat Level 10!', hurtSub: '💔 -1 life · {h} left', deadSub: '💀 Out of lives!', missSub: 'Sync up next round!',
     nextIn: 'Next round in {s}s',
     prepNote: 'Hands on the keyboard. The first round opens with random words.', seedNote: 'Remember these. Next round, type one word that relates to all of them.',
-    watchNote: 'You are watching this game.', lockedNote: 'Locked in <b>{w}</b>. Waiting for your teammate…', linkNote: 'Link <b>{a}</b> with one word.', linkJoin: '</b> and <b>',
+    watchNote: 'You are watching this game.', lockedNote: 'Locked in <b>{w}</b>. Waiting for your teammate…', lockedHidden: 'Word locked in. Waiting for your teammate…', linkNote: 'Link <b>{a}</b> with one word.', linkJoin: '</b> and <b>',
     againNote: 'Look at the last words and guess what your teammate will type.', missNote: 'No match yet. The timer restarts in a few seconds, get ready to type a new word.',
     pickNote: 'You set the topic this round. Type one or pick below.', sentTopic: 'Topic sent…', waitPick: 'Waiting for <b>{p}</b> to choose. After 20 seconds a random topic is used.',
     wordPh: 'Type your word…', lock: 'Lock in', topicPh: 'This round\'s topic…', setTopic: 'Set',
@@ -622,8 +622,6 @@ const store = {
   set(k, v) { try { localStorage.setItem('dt_' + k, JSON.stringify(v)); } catch {} },
 };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-// streamer mode: every entered word (and the room code) shows as * so viewers of a stream can't read it
-const mask = w => (S.streamer && w ? '*'.repeat(Math.min([...String(w)].length, 12)) : w);
 let toastT;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
 
@@ -1081,14 +1079,12 @@ $('#name-in').addEventListener('input', e => {
 });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
-// inputs hide their letters too; browsers without -webkit-text-security fall back to a password field
+// streamer mode hides only the letters you are typing in the word box; revealed words stay visible.
+// Browsers without -webkit-text-security fall back to a password field.
 function applyStreamer() {
   const b = $('#stream-btn'); b.setAttribute('aria-pressed', S.streamer); b.title = t('streamerTip');
-  const css = CSS.supports('-webkit-text-security', 'disc');
-  for (const id of ['#word-in', '#join-code']) {
-    const el = $(id); el.classList.toggle('masked', S.streamer);
-    if (!css) el.type = S.streamer ? 'password' : 'text';
-  }
+  const el = $('#word-in'); el.classList.toggle('masked', S.streamer);
+  if (!CSS.supports('-webkit-text-security', 'disc')) el.type = S.streamer ? 'password' : 'text';
 }
 
 // ---------- static text ----------
@@ -1180,7 +1176,7 @@ function renderRoom() {
   }
   const ready = m.teams === 1 || G.auto ? ps.length >= m.n : [0, 1].every(i => ps.filter(p => (p.presence.team | 0) === i).length >= 2);
   const head = S.roomKind === 'custom'
-    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(S.streamer ? '*' : c)}</span>`).join('')}</div><div><div style="font-weight:700">${t('codeLbl')}</div><div class="muted" style="font-size:13.5px">${t('codeHint')}</div><button class="btn sm" data-act="copy" style="margin-top:8px">${t('copy')}</button></div></div>`
+    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(c)}</span>`).join('')}</div><div><div style="font-weight:700">${t('codeLbl')}</div><div class="muted" style="font-size:13.5px">${t('codeHint')}</div><button class="btn sm" data-act="copy" style="margin-top:8px">${t('copy')}</button></div></div>`
     : `<div><div style="font-family:var(--f-display);font-size:26px;font-weight:800">${ps.length >= m.n ? t('matched') : t('gathering')}</div><div class="muted">${G.id === 0 ? t('autoStart') : t('hostNext')}</div></div>`;
   const md = t('modes'), ty = t('types');
   const seg = (act, keys, names, cur) => `<div class="seg">${keys.map(k => `<button class="chip" data-act="${act}" data-v="${k}" aria-pressed="${k === cur}" ${host && !G.auto ? '' : 'disabled'}>${names[k][0]}</button>`).join('')}</div>`;
@@ -1272,7 +1268,7 @@ function arenaHTML(G, ti) {
       slotOf = (p, i) => {
         const w = ws[i];
         if (hideTyped && !isSeed) return '<div class="wc"><div class="w wait">•••</div></div>';
-        if (typeof w === 'string' && w) return `<div class="wc"><div class="w">${esc(mask(w))}</div></div>`;
+        if (typeof w === 'string' && w) return `<div class="wc"><div class="w">${esc(w)}</div></div>`;
         return `<div class="wc"><div class="w wait">${tm.res === 'timeout' ? '—' : '…'}</div></div>`;
       };
     } else {
@@ -1302,7 +1298,7 @@ function renderGame() {
   const ti = dispTeam(), mt = myTeam(), me = myPeer();
   const m = MODES[G.mode]; const vs = m.teams > 1;
   setHTML($('#g-meta'), 'meta', [
-    S.roomKind === 'custom' ? `<span class="pill">${t('metaRoom')} <b style="color:var(--ink);font-family:var(--f-mono)">${esc(mask(S.roomName.slice(2).toUpperCase()))}</b></span>` : `<span class="pill">${t('metaQuick')}</span>`,
+    S.roomKind === 'custom' ? `<span class="pill">${t('metaRoom')} <b style="color:var(--ink);font-family:var(--f-mono)">${esc(S.roomName.slice(2).toUpperCase())}</b></span>` : `<span class="pill">${t('metaQuick')}</span>`,
     `<span class="pill">${t('modes')[G.mode][0]}</span>`, `<span class="pill">${t('types')[G.type][0]}</span>`,
     `<span class="pill">${roomLang().toUpperCase()}</span>`,
     mt < 0 ? `<span class="pill">${t('watching')}</span>` : '',
@@ -1329,10 +1325,10 @@ function renderGame() {
       const locked = S.my.lock && S.my.lock.r === tm.r;
       const prev = tm.seeds && tm.seeds[tm.r - 1];
       if (mt < 0) noteHtml = t('watchNote');
-      else if (locked) noteHtml = t('lockedNote', { w: esc(mask(S.pending ? S.pending.w : '')) });
+      else if (locked) noteHtml = S.streamer ? t('lockedHidden') : t('lockedNote', { w: esc(S.pending ? S.pending.w : '') });
       else {
         showWord = true;
-        noteHtml = prev ? t('linkNote', { a: prev.map(w => esc(mask(w))).join(t('linkJoin')) }) : t('againNote');
+        noteHtml = prev ? t('linkNote', { a: prev.map(esc).join(t('linkJoin')) }) : t('againNote');
       }
     } else if (tm.ph === 'pick') {
       const iAmPicker = picker === me;
@@ -1366,7 +1362,7 @@ function histTable(ti, hide) {
     const ws = roundWords(ti, r); const seed = !!(tm.seeds && tm.seeds[r]);
     const match = !seed && ws.every(w => w) && ws.every(w => norm(w) === norm(ws[0]));
     const lv = coop && G.rl ? G.rl[r - 1] : null;
-    const cell = w => (hide && !seed) ? '•••' : (w ? esc(mask(w)) : '<span style="color:var(--dim)">—</span>');
+    const cell = w => (hide && !seed) ? '•••' : (w ? esc(w) : '<span style="color:var(--dim)">—</span>');
     const c = `<td class="c">${r}${lv ? ' · ' + (lv === MAX_LV ? '👑' : 'Lv' + lv) : ''} ${seed ? '🎲' : match ? '⭐' : (coop ? '💔' : '')}</td>`;
     rows += `<tr class="${match ? 'match' : ''} ${seed ? 'seedrow' : ''}">` + (two ? `<td class="l">${cell(ws[0])}</td>${c}<td>${cell(ws[1])}</td>` : c + ws.map(w => `<td>${cell(w)}</td>`).join('')) + '</tr>';
   }
@@ -1397,7 +1393,7 @@ function renderOver() {
     const rounds = tm ? tm.r : 0;
     if (G.why === 'clear') {
       html = `<div class="big-emoji">🏆</div><div class="verdict good">${t('clearT')}</div>
-        <p class="muted" style="margin:0">${t('clearBody', { n: m.n, w: esc(mask(wordsOf(G.members[0][0])[rounds - 1] || '')) })}</p>
+        <p class="muted" style="margin:0">${t('clearBody', { n: m.n, w: esc(wordsOf(G.members[0][0])[rounds - 1] || '') })}</p>
         <div class="title-badge"><small>${t('titleUnlocked')}</small><b>${t('TITLE')}</b></div>
         <div class="stats"><div><b>${rounds}</b>${t('statRounds')}</div><div><b>${G.hp}</b>${t('statLives')}</div></div>
         <div class="acts">${S.amHost ? `<button class="btn gold" data-act="restart">${t('restart')}</button>` : waitTxt}${leaveBtn}</div>`;
