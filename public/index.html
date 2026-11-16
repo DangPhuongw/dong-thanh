@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Game gõ chữ nhiều người: cùng gõ một từ, trùng là lên level.">
-<style>[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>Đồng Thanh</title>
+<meta name="description" content="1WordAway: a multiplayer word game. Type the same word to level up.">
+<title>1WordAway</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap">
 <style>
-/* Layout: one centered column (900px). Home = hero with a live typing demo, then pickers. Game = HUD (level path + hearts), stage with timer ring and keycap input, then round history. Motif: keycaps and two typed words that meet. */
+/* Layout: one centered column (900px). Home = hero with a live typing demo, then pickers. Game = HUD (level path + hearts), mirrored arenas (player left, timer middle, player right), then round history. Motif: keycaps and two typed words that meet. */
 :root{
   --bg:#0f0d1b; --bg-2:#161329; --panel:#1b1731; --panel-2:#242043; --line:#352f58; --cap:#2a2550; --cap-2:#1f1b3d; --cap-edge:#120f26;
   --ink:#f5f1ff; --mute:#aba4cc; --dim:#726b99;
@@ -22,7 +21,9 @@
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
-html,body{background:var(--bg);color:var(--ink);min-height:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink);min-height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background:radial-gradient(600px 600px at 6% 0%,color-mix(in srgb,var(--tang) 20%,transparent),transparent 70%),
@@ -52,10 +53,15 @@ button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 
 /* top bar */
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 18px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 18px;flex-wrap:wrap}
+.top-right{display:flex;align-items:center;gap:8px}
 .brand{display:flex;align-items:center;gap:10px;white-space:nowrap;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.01em;background:none;border:0;cursor:pointer;padding:0}
 .brand .logo{display:flex;gap:3px}
 .brand .logo span{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;font-weight:800;color:#1a0f14;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.brand .w{color:var(--sun)}
+.lang{display:inline-flex;padding:3px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line)}
+.lang button{border:0;background:transparent;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:800;letter-spacing:.06em;color:var(--mute);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--sun);color:#1d1505}
 .pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);font-size:12.5px;color:var(--mute);white-space:nowrap;backdrop-filter:blur(6px)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
 .dot.on{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}
@@ -74,22 +80,20 @@ button,input{font:inherit;color:inherit}
 .demo{position:relative;padding:18px;border-radius:22px;background:linear-gradient(160deg,color-mix(in srgb,var(--panel-2) 92%,transparent),color-mix(in srgb,var(--panel) 92%,transparent));border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05);display:grid;gap:12px}
 .demo-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute);font-weight:600}
 .demo-top .t{font-family:var(--f-mono);color:var(--sun)}
-.demo-row{display:flex;gap:10px;align-items:center}
-.kf{flex:1;min-width:0;height:52px;border-radius:14px;background:var(--bg-2);border:1.5px solid var(--line);display:flex;align-items:center;padding:0 14px;font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:-.01em;transition:border-color .25s,box-shadow .25s,background .25s;overflow:hidden;white-space:nowrap}
+.demo-pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
+.demo-col{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.demo-link{font-size:20px;color:var(--dim);font-weight:800}
+.kf{width:100%;min-width:0;height:52px;border-radius:14px;background:var(--bg-2);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;padding:0 8px;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.01em;transition:border-color .25s,box-shadow .25s,background .25s;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .kf .caret{display:inline-block;width:2.5px;height:26px;background:var(--sun);margin-left:2px;border-radius:2px}
 @media (prefers-reduced-motion:no-preference){.kf .caret{animation:blink 1s steps(1) infinite}}
 @keyframes blink{50%{opacity:0}}
 .kf.hit{border-color:var(--sun);background:color-mix(in srgb,var(--sun) 12%,var(--bg-2));box-shadow:0 0 0 4px color-mix(in srgb,var(--sun) 18%,transparent)}
 .kf.off{border-color:color-mix(in srgb,var(--bad) 60%,var(--line))}
-.demo-pair{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:center}
-.demo-col{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
-.demo-col .kf{width:100%;justify-content:center;font-size:19px;padding:0 8px;text-overflow:ellipsis}
-.demo-link{font-size:20px;color:var(--dim);font-weight:800}
 .kf.seed{border-color:color-mix(in srgb,var(--lilac) 70%,var(--line));background:color-mix(in srgb,var(--lilac) 12%,var(--bg-2))}
-.demo-res.seed{color:var(--lilac)}
-.demo-res{height:30px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:18px;letter-spacing:-.01em}
+.demo-res{height:30px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:18px;letter-spacing:-.01em;text-align:center}
 .demo-res.good{color:var(--sun)}
 .demo-res.bad{color:var(--bad)}
+.demo-res.seed{color:var(--lilac)}
 
 .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.13em;color:var(--dim);margin:24px 0 10px}
 .card{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:20px;padding:16px;backdrop-filter:blur(8px)}
@@ -98,10 +102,6 @@ button,input{font:inherit;color:inherit}
 .field{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:6px}
 .inp{width:100%;background:var(--bg-2);border:1.5px solid var(--line);border-radius:13px;padding:11px 13px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s;caret-color:var(--sun)}
 .inp:focus{border-color:var(--sun);box-shadow:0 0 0 4px color-mix(in srgb,var(--sun) 15%,transparent)}
-.swatches{display:flex;gap:8px;flex-wrap:wrap}
-.sw{width:30px;height:30px;border-radius:9px;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.4);transition:transform .12s}
-.sw:hover{transform:translateY(-2px)}
-.sw[aria-pressed="true"]{border-color:var(--ink);transform:translateY(-2px)}
 
 .opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:640px){.opts{grid-template-columns:minmax(0,1fr)}}
@@ -114,10 +114,11 @@ button,input{font:inherit;color:inherit}
 .opt small{display:block;color:var(--mute);font-size:13px;line-height:1.35}
 .opt .q{position:absolute;top:9px;right:11px;font-size:11px;color:var(--mint);font-weight:700}
 .opt .lvtag{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;color:var(--sun);background:color-mix(in srgb,var(--sun) 13%,transparent);padding:1px 7px;border-radius:6px}
+.opt .lvtag.race{color:var(--sky);background:color-mix(in srgb,var(--sky) 13%,transparent)}
 
 .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;align-items:stretch}
 /* keycap buttons */
-.btn{--face:var(--cap);--edge:var(--cap-edge);display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:12px 18px;font-weight:700;font-size:15px;border:1px solid color-mix(in srgb,var(--line) 80%,white 8%);background:linear-gradient(180deg,color-mix(in srgb,var(--face) 100%,white 6%),var(--face));box-shadow:0 4px 0 var(--edge),0 10px 20px -10px rgba(0,0,0,.6);cursor:pointer;transition:transform .08s,box-shadow .08s,filter .15s;white-space:nowrap;position:relative;top:0}
+.btn{--face:var(--cap);--edge:var(--cap-edge);display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:12px 18px;font-weight:700;font-size:15px;border:1px solid color-mix(in srgb,var(--line) 80%,white 8%);background:linear-gradient(180deg,color-mix(in srgb,var(--face) 100%,white 6%),var(--face));box-shadow:0 4px 0 var(--edge),0 10px 20px -10px rgba(0,0,0,.6);cursor:pointer;transition:transform .08s,box-shadow .08s,filter .15s;white-space:nowrap;position:relative}
 .btn:hover{filter:brightness(1.1)}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge),0 4px 10px -6px rgba(0,0,0,.6)}
 .btn.primary{--face:var(--tang);--edge:var(--tang-d);color:#1d0f07;border-color:color-mix(in srgb,var(--tang) 70%,white)}
@@ -162,12 +163,12 @@ button,input{font:inherit;color:inherit}
 .chip[aria-pressed="true"]{border-color:var(--sun);color:var(--sun);background:color-mix(in srgb,var(--sun) 10%,var(--bg-2))}
 .chip[disabled]{cursor:default}
 .slots{display:grid;gap:8px}
-.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:560px){.teams{grid-template-columns:1fr}}
-.team h4{margin:0 0 8px;font-family:var(--f-display);font-size:16px;display:flex;align-items:center;gap:8px}
-.slot{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--bg-2);border:1px solid var(--line);min-height:52px;min-width:0}
 .slots.row .slot{flex-direction:column;justify-content:center;text-align:center;padding:14px 8px;gap:6px;min-height:110px}
 .slots.row .slot .nm{max-width:100%}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.teams{grid-template-columns:1fr}}
+.team h4{margin:0 0 8px;font-family:var(--f-display);font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.slot{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:14px;background:var(--bg-2);border:1px solid var(--line);min-height:52px;min-width:0}
 .slot.empty{border-style:dashed;color:var(--dim);justify-content:center;font-size:13.5px}
 .slot .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:6px;background:var(--panel-2);color:var(--mute);flex:none}
@@ -175,6 +176,8 @@ button,input{font:inherit;color:inherit}
 .tag.you{color:var(--mint)}
 .av{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:15px;color:#140d1d;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 .foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:18px}
+.langnote{margin:10px 0 0;font-size:13.5px;color:var(--mute)}
+.langnote b{color:var(--sun)}
 
 /* game */
 .g-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -187,7 +190,6 @@ button,input{font:inherit;color:inherit}
 .g-board.vs .arena[data-t="0"]{grid-column:1}
 .g-board.vs .arena[data-t="1"]{grid-column:2}
 #g-controls{grid-row:2;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;min-width:0}
-#g-controls:empty{display:none}
 @media (max-width:760px){.g-board.vs{grid-template-columns:minmax(0,1fr)}.g-board.vs .arena,.g-board.vs #g-controls{grid-column:1!important;grid-row:auto!important}}
 
 .hud{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:14px;padding:14px 16px;text-align:center}
@@ -202,7 +204,6 @@ button,input{font:inherit;color:inherit}
 @keyframes lvpop{0%{transform:scale(.5) rotate(-12deg)}60%{transform:scale(1.18) rotate(4deg)}}
 .lv-txt b{display:block;font-family:var(--f-display);font-size:18px;font-weight:800;letter-spacing:-.01em}
 .lv-txt span{font-size:12.5px;color:var(--mute)}
-.hud-right{display:grid;gap:10px;min-width:0}
 .path{display:flex;align-items:center;gap:0;min-width:0}
 .path i{flex:1;height:3px;background:var(--line);min-width:4px}
 .path i.on{background:linear-gradient(90deg,var(--tang),var(--sun))}
@@ -224,16 +225,15 @@ button,input{font:inherit;color:inherit}
 .hp-n small{color:var(--dim);font-weight:500}
 
 .arena{display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 16px 22px;text-align:center;min-width:0;border-radius:22px;border:1px solid transparent;backdrop-filter:blur(8px);background:linear-gradient(color-mix(in srgb,var(--panel) 97%,transparent),color-mix(in srgb,var(--panel) 97%,transparent)) padding-box,linear-gradient(140deg,color-mix(in srgb,var(--tang) 55%,var(--line)),var(--line) 40%,var(--line) 60%,color-mix(in srgb,var(--sky) 55%,var(--line))) border-box;box-shadow:0 30px 60px -36px rgba(0,0,0,.8)}
-.round-line{display:flex;gap:10px;align-items:baseline;justify-content:center;flex-wrap:wrap}
-.round-no{font-family:var(--f-mono);font-size:12.5px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase}
-.topic{font-family:var(--f-display);font-size:clamp(22px,3.8vw,30px);font-weight:800;letter-spacing:-.02em;text-wrap:balance}
-.topic .k{color:var(--sun)}
-.topic.none{color:var(--mute);font-weight:500;font-size:18px}
 .arena.t1{background:linear-gradient(color-mix(in srgb,var(--panel) 97%,transparent),color-mix(in srgb,var(--panel) 97%,transparent)) padding-box,linear-gradient(220deg,color-mix(in srgb,var(--sky) 60%,var(--line)),var(--line) 45%,var(--line) 60%,color-mix(in srgb,var(--sky) 30%,var(--line))) border-box}
 .g-board.vs .arena.t0{background:linear-gradient(color-mix(in srgb,var(--panel) 97%,transparent),color-mix(in srgb,var(--panel) 97%,transparent)) padding-box,linear-gradient(140deg,color-mix(in srgb,var(--tang) 60%,var(--line)),var(--line) 45%,var(--line) 60%,color-mix(in srgb,var(--tang) 30%,var(--line))) border-box}
 .arena.mine{box-shadow:0 0 0 2px color-mix(in srgb,var(--sun) 45%,transparent),0 30px 60px -36px rgba(0,0,0,.8)}
 .team-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:17px}
 .team-tag small{font-family:var(--f-body);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sun);background:color-mix(in srgb,var(--sun) 14%,transparent);padding:2px 8px;border-radius:6px}
+.round-no{font-family:var(--f-mono);font-size:12.5px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase}
+.topic{font-family:var(--f-display);font-size:clamp(22px,3.8vw,30px);font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.topic .k{color:var(--sun)}
+.topic.none{color:var(--mute);font-weight:500;font-size:18px}
 /* seats: player A left, center ring/verdict, player B right (third player under the center) */
 .seats{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:14px;align-items:center;width:100%}
 .seats .mid{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px;max-width:230px}
@@ -248,27 +248,17 @@ button,input{font:inherit;color:inherit}
 .seat.ok{border-color:color-mix(in srgb,var(--good) 60%,var(--line));box-shadow:0 0 24px -10px var(--good)}
 .cap{font-size:12.5px;color:var(--mute);font-weight:600;padding:8px 10px;border-radius:12px;border:1px dashed var(--line);width:100%}
 .cap.ok{color:var(--good);border-style:solid;border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
-.seat .wc{width:100%;min-width:0;padding:10px 8px 12px}
-.seat .wc .w{font-size:clamp(18px,2.6vw,24px)}
-.seats.seed .wc{border-color:color-mix(in srgb,var(--lilac) 60%,var(--line));box-shadow:0 6px 0 var(--cap-edge),0 0 24px -8px color-mix(in srgb,var(--lilac) 60%,transparent)}
-.dice{font-size:34px;line-height:1}
-.mid .verdict{font-size:clamp(22px,3.4vw,32px)}
-.mid .verdict.mid{font-size:clamp(18px,2.6vw,22px)}
-.mid .vsub{font-size:13px;padding:6px 11px;text-align:center}
-.arena.compact .ring{width:120px;height:120px}
-.arena.compact .ring .num{font-size:36px}
-.arena.compact .seats .mid{min-width:124px}
-@media (max-width:560px){
-  .seats{gap:8px}.seats .mid{min-width:112px}
-  .ring{width:118px!important;height:118px!important}.ring .num{font-size:34px!important}
-  .seat{padding:12px 6px}.seat .av{width:42px;height:42px;font-size:18px}
-}
-.seats.match .seat{border-color:var(--sun)}
-.cards{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .typing{display:inline-flex;gap:3px;vertical-align:middle;margin-left:2px}
 .typing i{width:4px;height:4px;border-radius:50%;background:var(--mute)}
 @media (prefers-reduced-motion:no-preference){.typing i{animation:tdot 1.2s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}}
 @keyframes tdot{30%{transform:translateY(-3px);background:var(--ink)}}
+.wc{width:100%;min-width:0;padding:10px 8px 12px;border-radius:16px;background:linear-gradient(180deg,var(--cap),var(--cap-2));border:1px solid color-mix(in srgb,var(--c,var(--line)) 60%,var(--line));box-shadow:0 6px 0 var(--cap-edge),inset 0 -3px 0 color-mix(in srgb,var(--c,var(--line)) 50%,transparent)}
+.wc .w{font-family:var(--f-display);font-size:clamp(18px,2.6vw,24px);font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
+.wc .w.wait{color:var(--dim)}
+.seats.seed .wc{border-color:color-mix(in srgb,var(--lilac) 60%,var(--line));box-shadow:0 6px 0 var(--cap-edge),0 0 24px -8px color-mix(in srgb,var(--lilac) 60%,transparent)}
+.seats.match .seat{border-color:var(--sun)}
+.seats.match .wc{border-color:var(--sun);box-shadow:0 6px 0 #8a6a22,0 0 30px -4px color-mix(in srgb,var(--sun) 60%,transparent)}
+.dice{font-size:34px;line-height:1}
 .ring{position:relative;width:156px;height:156px}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring .trk{stroke:var(--panel-2)}
@@ -278,20 +268,25 @@ button,input{font:inherit;color:inherit}
 .ring.urgent .num{color:var(--bad)}
 @media (prefers-reduced-motion:no-preference){.ring.urgent .num{animation:pulse 1s ease-in-out infinite}}
 @keyframes pulse{50%{transform:scale(1.08)}}
-.entry{display:flex;gap:10px;width:100%;max-width:460px}
-.entry .inp{font-size:20px;font-family:var(--f-display);font-weight:700;text-align:center;flex:1;min-width:0;height:56px;border-radius:15px;background:var(--bg-2)}
-.entry .btn{height:56px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:480px}
-.note{color:var(--mute);font-size:14.5px;max-width:48ch}
-.note b{color:var(--ink)}
-.shake{animation:shake .35s}
-@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-
-.wc{min-width:128px;max-width:100%;padding:12px 18px 14px;border-radius:16px;background:linear-gradient(180deg,var(--cap),var(--cap-2));border:1px solid color-mix(in srgb,var(--c,var(--line)) 60%,var(--line));box-shadow:0 6px 0 var(--cap-edge),inset 0 -3px 0 color-mix(in srgb,var(--c,var(--line)) 50%,transparent)}
-.wc .who{font-size:12px;color:var(--mute);font-weight:600}
-.wc .w{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
-.wc .w.wait{color:var(--dim)}
-.seats.match .wc{border-color:var(--sun);box-shadow:0 6px 0 #8a6a22,0 0 30px -4px color-mix(in srgb,var(--sun) 60%,transparent)}
+.arena.compact .ring{width:120px;height:120px}
+.arena.compact .ring .num{font-size:36px}
+.arena.compact .seats .mid{min-width:124px}
+@media (max-width:560px){
+  .seats{gap:8px}.seats .mid{min-width:112px}
+  .ring{width:118px!important;height:118px!important}.ring .num{font-size:34px!important}
+  .seat{padding:12px 6px}.seat .av{width:42px;height:42px;font-size:18px}
+}
+.verdict{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5.4vw,44px);letter-spacing:-.03em;line-height:1.02}
+.verdict.good{background:linear-gradient(95deg,var(--tang),var(--sun),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
+.verdict.bad{color:var(--bad)}
+.verdict.mid{color:var(--ink);font-size:clamp(22px,4vw,30px)}
+.mid .verdict{font-size:clamp(22px,3.4vw,32px)}
+.mid .verdict.mid{font-size:clamp(18px,2.6vw,22px)}
+.vsub{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;font-weight:700;font-size:13px;background:var(--bg-2);border:1px solid var(--line);text-align:center}
+.vsub.up{color:var(--sun);border-color:color-mix(in srgb,var(--sun) 50%,var(--line))}
+.vsub.hurt{color:var(--rose);border-color:color-mix(in srgb,var(--rose) 45%,var(--line))}
+.nextin{font-family:var(--f-mono);font-size:12px;color:var(--mute);letter-spacing:.06em}
+.nextin:empty{display:none}
 @media (prefers-reduced-motion:no-preference){
   .wc{animation:flip .55s cubic-bezier(.2,.9,.3,1.3) both}
   .seat.s1 .wc{animation-delay:.12s}.seat.s2 .wc{animation-delay:.24s}
@@ -305,31 +300,29 @@ button,input{font:inherit;color:inherit}
 @keyframes pulll{50%{transform:translateX(-10px) scale(1.03)}}
 @keyframes flip{from{transform:rotateX(90deg) translateY(10px);opacity:0}}
 @keyframes pop{from{transform:scale(.6);opacity:0}}
-.verdict{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5.4vw,44px);letter-spacing:-.03em;line-height:1.02}
-.verdict.good{background:linear-gradient(95deg,var(--tang),var(--sun),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
-.verdict.bad{color:var(--bad)}
-.verdict.mid{color:var(--ink);font-size:clamp(22px,4vw,30px)}
-.vsub{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-weight:700;font-size:14.5px;background:var(--bg-2);border:1px solid var(--line)}
-.vsub.up{color:var(--sun);border-color:color-mix(in srgb,var(--sun) 50%,var(--line))}
-.vsub.hurt{color:var(--rose);border-color:color-mix(in srgb,var(--rose) 45%,var(--line))}
+.entry{display:flex;gap:10px;width:100%;max-width:460px}
+.entry .inp{font-size:20px;font-family:var(--f-display);font-weight:700;text-align:center;flex:1;min-width:0;height:56px;border-radius:15px;background:var(--bg-2)}
+.entry .btn{height:56px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:480px}
+.note{color:var(--mute);font-size:14.5px;max-width:48ch}
+.note b{color:var(--ink)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
 .hist h3{margin:0 0 10px;font-family:var(--f-display);font-size:16px;text-align:center}
 .hist{margin-top:14px}
 .hist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 @media (max-width:760px){.hist-grid{grid-template-columns:minmax(0,1fr)}}
 .hist-grid h4{margin:0 0 6px;font-family:var(--f-display);font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:6px}
-table.sym td.l,table.sym th.l{text-align:right}
-table.sym td.c,table.sym th.c{text-align:center;color:var(--dim);font-family:var(--f-mono);font-size:12.5px;width:1%}
-tr.seedrow td{color:var(--lilac)}
 .tbl-wrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:14.5px}
 th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-td.r{font-family:var(--f-mono);color:var(--dim);width:40px}
-td.lvc{font-family:var(--f-mono);color:var(--sun);width:44px;font-size:12.5px}
+table.sym td.l,table.sym th.l{text-align:right}
+table.sym td.c,table.sym th.c{text-align:center;color:var(--dim);font-family:var(--f-mono);font-size:12.5px;width:1%}
 tr.match td{color:var(--sun);font-weight:700}
-tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line))}
-.empty-hist{color:var(--dim);font-size:14px;margin:0}
+tr.seedrow td{color:var(--lilac)}
+.empty-hist{color:var(--dim);font-size:14px;margin:0;text-align:center}
 
 /* overlay */
 .overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 76%,transparent);backdrop-filter:blur(7px);padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -350,17 +343,22 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
 </style>
 </head>
 <body>
-
 <div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <canvas id="bg" aria-hidden="true"></canvas>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8f5e"/><stop offset=".5" stop-color="#ffd166"/><stop offset="1" stop-color="#5ec4ff"/></linearGradient></defs></svg>
 <div class="wrap">
   <header class="top">
-    <button class="brand" data-act="home" aria-label="Về trang chính">
-      <span class="logo" aria-hidden="true"><span style="background:var(--tang)">Đ</span><span style="background:var(--sky)">T</span></span>
-      Đồng Thanh
+    <button class="brand" data-act="home" aria-label="1WordAway">
+      <span class="logo" aria-hidden="true"><span style="background:var(--tang)">1</span><span style="background:var(--sky)">W</span></span>
+      <span>1<span class="w">Word</span>Away</span>
     </button>
-    <span class="pill" id="net-pill"><span class="dot" id="net-dot"></span><span id="net-txt">Đang kết nối…</span></span>
+    <div class="top-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button data-act="lang" data-v="vi" aria-pressed="false">VI</button>
+        <button data-act="lang" data-v="en" aria-pressed="false">EN</button>
+      </div>
+      <span class="pill" id="net-pill"><span class="dot" id="net-dot"></span><span id="net-txt"></span></span>
+    </div>
   </header>
 
   <div id="banner"></div>
@@ -369,12 +367,12 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
   <section id="sc-home">
     <div class="hero">
       <div>
-        <div class="eyebrow">Game gõ chữ thần giao cách cảm</div>
-        <h1>Cùng gõ một từ.<br><em>Trùng là qua màn.</em></h1>
-        <p class="lede">Trận mở màn bằng các từ ngẫu nhiên. Từ đó, mỗi vòng mọi người bí mật gõ một từ nối chúng trong 30 giây. Gõ giống hệt nhau là lên level, lệch từ hoặc hết giờ thì mất mạng.</p>
+        <div class="eyebrow" data-i18n="eyebrow"></div>
+        <h1><span data-i18n="h1a"></span><br><em data-i18n="h1b"></em></h1>
+        <p class="lede" data-i18n="lede"></p>
       </div>
       <div class="demo" aria-hidden="true">
-        <div class="demo-top"><span>Vòng <span class="t" id="d-round">1</span></span><span class="t">⭐ Level <span id="d-lv">1</span> · ❤️ <span id="d-hp">20</span></span></div>
+        <div class="demo-top"><span><span data-i18n="roundWord"></span> <span class="t" id="d-round">1</span></span><span class="t">⭐ Level <span id="d-lv">1</span> · ❤️ <span id="d-hp">20</span></span></div>
         <div class="demo-pair">
           <div class="demo-col"><span class="av" style="background:var(--tang)">A</span><div class="kf" id="d1"><span class="txt"></span><span class="caret"></span></div></div>
           <div class="demo-link">⇄</div>
@@ -386,40 +384,28 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
 
     <div class="card me">
       <div class="field">
-        <label for="name-in">Tên của bạn</label>
+        <label for="name-in" data-i18n="yourName"></label>
         <input id="name-in" class="inp" maxlength="18" autocomplete="nickname">
-      </div>
-      <div class="field" style="flex:0 1 auto">
-        <label>Màu</label>
-        <div class="swatches" id="swatches"></div>
       </div>
     </div>
 
-    <h2 class="lbl">Chế độ</h2>
+    <h2 class="lbl" data-i18n="modeLbl"></h2>
     <div class="opts" id="mode-opts"></div>
-    <h2 class="lbl">Chủ đề</h2>
+    <h2 class="lbl" data-i18n="topicLbl"></h2>
     <div class="opts" id="type-opts"></div>
 
     <div class="cta">
-      <button class="btn primary big" data-act="seek" id="seek-btn">Ghép trận ngẫu nhiên</button>
-      <button class="btn big" data-act="create" id="create-btn">Tạo phòng</button>
+      <button class="btn primary big" data-act="seek" id="seek-btn" data-i18n="seek"></button>
+      <button class="btn big" data-act="create" id="create-btn" data-i18n="create"></button>
       <form class="join" id="join-form">
-        <input id="join-code" class="inp" maxlength="4" placeholder="MÃ" autocomplete="off" aria-label="Mã phòng">
-        <button class="btn" id="join-btn">Vào phòng</button>
+        <input id="join-code" class="inp" maxlength="4" autocomplete="off" data-i18n-ph="codePh" aria-label="Room code">
+        <button class="btn" id="join-btn" data-i18n="join"></button>
       </form>
     </div>
 
     <details class="rules">
-      <summary>Luật chơi</summary>
-      <ul>
-        <li><b>🎲 Mở màn bằng từ ngẫu nhiên.</b> Vòng đầu của trận (và của mỗi level mới) mỗi người nhận một từ ngẫu nhiên. Vòng sau, cả nhóm cố gõ một từ nối được các từ đó.</li>
-        <li><b>Mỗi vòng 30 giây.</b> Ai cũng gõ một từ rồi bấm Chốt. Từ được giấu tới khi cả nhóm cùng chốt.</li>
-        <li><b>Cặp đôi và Bộ ba leo 10 level.</b> Gõ trùng khớp là LEVEL UP và được hồi đầy mạng của level mới. Lệch từ hoặc hết 30 giây thì mất 1 ❤️. Hết mạng là GAME OVER, chơi lại từ Level 1.</li>
-        <li><b>Qua Level 10 là phá đảo</b> và mở khoá danh hiệu <b>Thần Giao Cách Cảm Tối Thượng</b>.</li>
-        <li><b>2v2:</b> hai cặp chơi song song, cặp nào gõ trùng trước thì thắng. Cặp nào để hết giờ thì thua luôn.</li>
-        <li><b>Chủ đề ngẫu nhiên:</b> mỗi level một chủ đề mới. <b>Luân phiên chọn:</b> đầu mỗi vòng một người ra đề (20 giây).</li>
-        <li>Trong cùng một level không gõ lại từ đã xuất hiện. Không phân biệt hoa thường, có phân biệt dấu: "cá" khác "ca".</li>
-      </ul>
+      <summary data-i18n="rulesTitle"></summary>
+      <ul id="rules-list"></ul>
       <div class="ladder" id="ladder"></div>
     </details>
   </section>
@@ -428,11 +414,11 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
   <section id="sc-queue" hidden>
     <div class="card queue">
       <div class="radar"><span></span><span></span><span></span></div>
-      <h2>Đang tìm đồng đội…</h2>
+      <h2 data-i18n="qTitle"></h2>
       <p id="q-info"></p>
       <p><span class="big-count" id="q-count">1/2</span></p>
       <p class="muted" id="q-time">0:00</p>
-      <div class="cta" style="justify-content:center"><button class="btn" data-act="cancel-seek">Huỷ tìm</button></div>
+      <div class="cta" style="justify-content:center"><button class="btn" data-act="cancel-seek" data-i18n="cancel"></button></div>
     </div>
   </section>
 
@@ -443,26 +429,26 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
   <section id="sc-game" hidden>
     <div class="g-head">
       <div class="g-meta" id="g-meta"></div>
-      <button class="btn ghost sm" data-act="leave">Rời phòng</button>
+      <button class="btn ghost sm" data-act="leave" data-i18n="leave"></button>
     </div>
     <div class="card hud" id="g-hud" hidden></div>
     <div class="g-board" id="g-board">
       <div id="g-arenas"></div>
       <div id="g-controls">
         <form id="word-form" class="entry" hidden>
-          <input id="word-in" class="inp" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ từ của bạn…" aria-label="Từ của bạn">
-          <button class="btn primary">Chốt</button>
+          <input id="word-in" class="inp" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-ph="wordPh" aria-label="Word">
+          <button class="btn primary" data-i18n="lock"></button>
         </form>
         <form id="pick-form" class="entry" hidden>
-          <input id="pick-in" class="inp" maxlength="32" autocomplete="off" placeholder="Chủ đề vòng này…" aria-label="Chủ đề">
-          <button class="btn primary">Ra đề</button>
+          <input id="pick-in" class="inp" maxlength="32" autocomplete="off" data-i18n-ph="topicPh" aria-label="Topic">
+          <button class="btn primary" data-i18n="setTopic"></button>
         </form>
         <div class="chips" id="pick-sugg" hidden></div>
         <div class="note" id="g-note"></div>
       </div>
     </div>
     <div class="card hist">
-      <h3>Các vòng đã chơi</h3>
+      <h3 data-i18n="histTitle"></h3>
       <div id="g-hist"></div>
     </div>
   </section>
@@ -475,32 +461,141 @@ tr.lvsep td{border-bottom:1px dashed color-mix(in srgb,var(--sun) 40%,var(--line
 <script>
 (() => {
 'use strict';
-// ---------- constants ----------
-const MODES = {
-  coop2: { name:'Cặp đôi', sub:'2 người cùng gõ', n:2, teams:1, levels:true },
-  vs22:  { name:'Đấu đôi 2v2', sub:'Cặp nào gõ trùng trước thì thắng', n:4, teams:2 },
-  coop3: { name:'Bộ ba', sub:'3 người cùng gõ', n:3, teams:1, levels:true },
+// ---------- text in both languages ----------
+const T = {
+  vi: {
+    eyebrow: 'Game nhập chữ thần giao cách cảm',
+    h1a: 'Cùng nhập một từ.', h1b: 'Trùng là qua màn.',
+    lede: 'Trận mở màn bằng các từ ngẫu nhiên. Từ đó, mỗi vòng mọi người bí mật nhập một từ nối chúng trong 30 giây. Nhập giống hệt nhau là lên level, lệch từ hoặc hết giờ thì mất mạng.',
+    roundWord: 'Vòng', yourName: 'Tên của bạn', modeLbl: 'Chế độ', topicLbl: 'Chủ đề',
+    seek: 'Ghép trận ngẫu nhiên', create: 'Tạo phòng', codePh: 'MÃ', join: 'Vào phòng', rulesTitle: 'Luật chơi',
+    rules: [
+      '<b>🎲 Mở màn bằng từ ngẫu nhiên.</b> Vòng đầu của trận (và của mỗi level mới) mỗi người nhận một từ ngẫu nhiên. Vòng sau, cả nhóm cố nhập một từ nối được các từ đó.',
+      '<b>Mỗi vòng 30 giây.</b> Ai cũng nhập một từ rồi bấm Chốt. Từ được giấu tới khi cả nhóm cùng chốt. Lệch từ thì đồng hồ tự chạy lại sau vài giây, cả nhóm nhập tiếp.',
+      '<b>Cặp đôi và Bộ ba leo 10 level.</b> Nhập trùng khớp là LEVEL UP và được hồi đầy mạng của level mới. Lệch từ hoặc hết 30 giây thì mất 1 ❤️. Hết mạng là GAME OVER, chơi lại từ Level 1.',
+      '<b>Qua Level 10 là phá đảo</b> và mở khoá danh hiệu <b>Thần Giao Cách Cảm Tối Thượng</b>.',
+      '<b>2v2:</b> hai cặp chơi song song, cặp nào nhập trùng trước thì thắng. Cặp nào để hết giờ thì thua luôn.',
+      '<b>Chủ đề ngẫu nhiên:</b> mỗi level một chủ đề mới. <b>Luân phiên chọn:</b> đầu mỗi vòng một người ra đề (20 giây).',
+      '<b>Ghép trận ngẫu nhiên chỉ ghép người cùng ngôn ngữ.</b> Phòng riêng dùng ngôn ngữ của chủ phòng cho từ ngẫu nhiên và chủ đề.',
+      'Trong cùng một level không nhập lại từ đã xuất hiện. Không phân biệt hoa thường, có phân biệt dấu: "cá" khác "ca".',
+    ],
+    modes: { coop2: ['Cặp đôi', '2 người cùng nhập'], vs22: ['Đấu đôi 2v2', 'Cặp nào nhập trùng trước thì thắng'], coop3: ['Bộ ba', '3 người cùng nhập'] },
+    types: { free: ['Không chủ đề', 'Chế độ chính, nhập gì cũng được'], rand: ['Chủ đề ngẫu nhiên', 'Mỗi level một chủ đề chung'], turn: ['Luân phiên chọn', 'Mỗi vòng một người ra đề'] },
+    lvtag: '⭐ 10 level · ❤️ 20 mạng', race: 'Đua tốc độ', searching: '{n} đang tìm',
+    online: '{n} người đang online', connecting: 'Đang kết nối…', reconnecting: 'Đang nối lại…', offline: 'Ngoại tuyến',
+    bannerWake: '<b>Đang kết nối máy chủ…</b> Nếu lâu không có ai chơi, máy chủ miễn phí cần khoảng 30 đến 60 giây để thức dậy.',
+    qTitle: 'Đang tìm đồng đội…', cancel: 'Huỷ tìm',
+    loadingRoom: 'Đang vào phòng…', codeLbl: 'Mã phòng', codeHint: 'Gửi mã này cho bạn bè để vào cùng phòng', copy: 'Sao chép mã',
+    copied: 'Đã sao chép mã {c}', selectCopy: 'Bôi đen mã rồi sao chép nhé', matched: 'Đã ghép đủ người!', gathering: 'Đang gom người chơi…',
+    autoStart: 'Trận sẽ tự bắt đầu khi đủ người.', hostNext: 'Chủ phòng bấm bắt đầu để chơi tiếp.', leave: 'Rời phòng', hostPicks: '(chủ phòng chọn)',
+    levelsNote: '⭐ Leo 10 level, bắt đầu với ❤️ 20 mạng. Mỗi level ít hơn 2 mạng, Level 10 chỉ còn 2.',
+    players: 'Người chơi', waitingP: 'Đang chờ người chơi…', spectators: 'Khán giả', extra: 'Dư', switchTeam: 'Đổi đội',
+    readyGo: 'Đủ người rồi, bắt đầu thôi.', needN: 'Cần {n} người', perTeam: ', mỗi đội 2', waitHost: 'Chờ <b>{h}</b> bắt đầu…', start: 'Bắt đầu',
+    hostTag: 'Chủ phòng', youTag: 'Bạn', roomLang: 'Ngôn ngữ phòng: <b>{l}</b>. Từ ngẫu nhiên và chủ đề dùng ngôn ngữ này.',
+    langName: { vi: 'Tiếng Việt', en: 'Tiếng Anh' },
+    teams: ['Đội Cam', 'Đội Lam'], yourTeam: 'Đội bạn',
+    metaRoom: 'Phòng', metaQuick: 'Ghép ngẫu nhiên', watching: 'Đang xem',
+    prep: 'Chuẩn bị', round: 'Vòng {n}', seedTag: ' · 🎲 Từ khởi đầu', topicIs: 'Chủ đề: ',
+    turnPrep: 'Mỗi vòng một người ra đề', coopPrep: '⭐ Level 1 · ❤️ 20 mạng', noTopicPrep: 'Không chủ đề',
+    picking: '{p} đang ra đề…', seedOpen: 'Mở màn bằng từ ngẫu nhiên', anything: 'Không chủ đề. Nhập gì cũng được.',
+    ready: 'Sẵn sàng', choosing: '✍️ Đang ra đề', waitTopic: 'Chờ đề', locked: '✓ Đã chốt', typing: 'Đang nhập', youSuffix: ' (bạn)',
+    seedV: 'Từ khởi đầu', seedSub: 'Vòng sau: tìm một từ nối các từ này', match: 'TRÙNG KHỚP!', clear: 'PHÁ ĐẢO!', miss: 'Lệch từ rồi!', timeout: 'Hết giờ!',
+    upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Vượt qua Level 10!', hurtSub: '💔 -1 mạng · còn {h}', deadSub: '💀 Hết mạng!', missSub: 'Vòng sau bắt sóng lại!',
+    nextIn: 'Vòng mới sau {s} giây',
+    prepNote: 'Đặt tay lên bàn phím. Vòng đầu sẽ mở bằng từ ngẫu nhiên.', seedNote: 'Ghi nhớ các từ này. Vòng sau hãy nhập một từ liên quan tới tất cả.',
+    watchNote: 'Bạn đang xem trận này.', lockedNote: 'Đã chốt <b>{w}</b>. Đang chờ đồng đội…', linkNote: 'Nối <b>{a}</b> bằng một từ chung.', linkJoin: '</b> với <b>',
+    againNote: 'Nhìn các từ vòng trước, đoán xem đồng đội sẽ nhập gì.', missNote: 'Chưa trùng. Đồng hồ sẽ tự chạy lại sau vài giây, chuẩn bị nhập từ mới.',
+    pickNote: 'Bạn ra đề vòng này. Nhập chủ đề hoặc chọn nhanh bên dưới.', sentTopic: 'Đã gửi đề…', waitPick: 'Chờ <b>{p}</b> ra đề. Hết 20 giây sẽ lấy đề ngẫu nhiên.',
+    wordPh: 'Nhập từ của bạn…', lock: 'Chốt', topicPh: 'Chủ đề vòng này…', setTopic: 'Ra đề',
+    secs: 'giây', pickL: 'ra đề', startL: 'bắt đầu',
+    histTitle: 'Các vòng đã chơi', histNone: 'Chưa có vòng nào.', histAfter: 'Từ của mỗi vòng sẽ hiện ở đây sau khi lật.', roundCol: 'Vòng',
+    boss: '👑 Trùm cuối', bossSub: 'Chỉ còn đúng 2 mạng!', nextLv: 'Nhập trùng để lên Level {n}', lives: '{h} mạng',
+    waitRestart: 'Chờ {h} bắt đầu lại…', requeue: 'Tìm trận khác', leftT: 'Có người rời phòng', leftSub: 'Trận đấu dừng lại.', backLobby: 'Về phòng chờ',
+    clearT: 'PHÁ ĐẢO TOÀN DIỆN!', clearBody: 'Cả {n} người vượt qua 10 level, chốt hạ bằng từ <b>{w}</b>.', titleUnlocked: 'Danh hiệu mở khoá', TITLE: 'Thần Giao Cách Cảm Tối Thượng',
+    statRounds: 'vòng', statLives: 'mạng còn lại', restart: 'Chơi lại từ Level 1', restart20: 'Chơi lại từ Level 1 (❤️ 20)',
+    deadBody: 'Hết mạng ở <b>{l}</b> sau {r} vòng. {who} phải dừng bước tại đây.', who2: 'Hai bạn', who3: 'Cả ba bạn', statLv: 'level đã qua', statPlayed: 'vòng đã chơi',
+    teamWins: '{t} thắng', youWin: 'Đội bạn thắng!', theyWin: 'Đội kia nhanh hơn', howMatch: 'nhập trùng sau {r} vòng', howTimeout: 'vì đội kia để hết giờ',
+    yourTimeout: 'Đội bạn để hết giờ.', newGame: 'Chơi ván mới',
+    notConnected: 'Chưa kết nối được phòng chơi', busy: 'Máy chủ đang bận, thử lại sau ít giây', cantJoin: 'Không vào được phòng', lost: 'Mất kết nối phòng',
+    needPlayers: 'Cần đủ {n} người', teamsOf2: 'Mỗi đội cần đúng 2 người', used: '"{w}" đã xuất hiện rồi, chọn từ khác nhé', code4: 'Mã phòng gồm 4 ký tự', anon: 'Ẩn danh',
+    seedRes: '🎲 Từ khởi đầu ngẫu nhiên', matchRes: 'TRÙNG KHỚP! ⭐ Level up', missRes: '💔 Lệch từ · -1 mạng', someone: 'Ai đó',
+  },
+  en: {
+    eyebrow: 'A telepathic word game',
+    h1a: 'Type the same word.', h1b: 'Match to level up.',
+    lede: 'Every game opens with random words. Each round, everyone secretly types one word that links them, within 30 seconds. Type the exact same word to level up; a mismatch or a timeout costs a life.',
+    roundWord: 'Round', yourName: 'Your name', modeLbl: 'Mode', topicLbl: 'Topic',
+    seek: 'Quick match', create: 'Create room', codePh: 'CODE', join: 'Join', rulesTitle: 'How to play',
+    rules: [
+      '<b>🎲 Random openers.</b> The first round of a game (and of each new level) deals everyone a random word. Next round, everyone tries to type one word that links them.',
+      '<b>30 seconds per round.</b> Everyone types a word and locks it in. Words stay hidden until everyone has locked. After a mismatch the timer restarts by itself a few seconds later and everyone types again.',
+      '<b>Duo and Trio climb 10 levels.</b> A match is a LEVEL UP and refills the new level\'s lives. A mismatch or a timeout costs 1 ❤️. Out of lives means GAME OVER, back to Level 1.',
+      '<b>Beat Level 10</b> to unlock the title <b>Supreme Telepath</b>.',
+      '<b>2v2:</b> two pairs play side by side; the first pair to match wins. A pair that runs out of time loses.',
+      '<b>Random topic:</b> a new shared topic each level. <b>Take turns:</b> each round one player sets the topic (20 seconds).',
+      '<b>Quick match only pairs players who chose the same language.</b> Private rooms use the host\'s language for random words and topics.',
+      'Within a level, a word can\'t be reused. Capitals don\'t matter.',
+    ],
+    modes: { coop2: ['Duo', '2 players type together'], vs22: ['2v2 Battle', 'First pair to match wins'], coop3: ['Trio', '3 players type together'] },
+    types: { free: ['No topic', 'Main mode, anything goes'], rand: ['Random topic', 'A shared topic each level'], turn: ['Take turns', 'Each round someone sets the topic'] },
+    lvtag: '⭐ 10 levels · ❤️ 20 lives', race: 'Speed race', searching: '{n} searching',
+    online: '{n} online', connecting: 'Connecting…', reconnecting: 'Reconnecting…', offline: 'Offline',
+    bannerWake: '<b>Connecting to the server…</b> If nobody has played for a while, the free server needs 30 to 60 seconds to wake up.',
+    qTitle: 'Finding teammates…', cancel: 'Cancel',
+    loadingRoom: 'Joining room…', codeLbl: 'Room code', codeHint: 'Send this code to friends so they can join', copy: 'Copy code',
+    copied: 'Copied {c}', selectCopy: 'Select the code and copy it', matched: 'Match found!', gathering: 'Gathering players…',
+    autoStart: 'The game starts once everyone is here.', hostNext: 'The host starts the next game.', leave: 'Leave', hostPicks: '(host picks)',
+    levelsNote: '⭐ Climb 10 levels starting with ❤️ 20 lives. Each level gives 2 fewer; Level 10 has only 2.',
+    players: 'Players', waitingP: 'Waiting for a player…', spectators: 'Spectators', extra: 'Extra', switchTeam: 'Switch team',
+    readyGo: 'Everyone is here. Let\'s go.', needN: 'Needs {n} players', perTeam: ', 2 per team', waitHost: 'Waiting for <b>{h}</b> to start…', start: 'Start',
+    hostTag: 'Host', youTag: 'You', roomLang: 'Room language: <b>{l}</b>. Random words and topics use this language.',
+    langName: { vi: 'Vietnamese', en: 'English' },
+    teams: ['Orange team', 'Blue team'], yourTeam: 'Your team',
+    metaRoom: 'Room', metaQuick: 'Quick match', watching: 'Watching',
+    prep: 'Get ready', round: 'Round {n}', seedTag: ' · 🎲 Starting words', topicIs: 'Topic: ',
+    turnPrep: 'Someone sets the topic each round', coopPrep: '⭐ Level 1 · ❤️ 20 lives', noTopicPrep: 'No topic',
+    picking: '{p} is choosing a topic…', seedOpen: 'Opening with random words', anything: 'No topic. Anything goes.',
+    ready: 'Ready', choosing: '✍️ Choosing', waitTopic: 'Waiting', locked: '✓ Locked in', typing: 'Typing', youSuffix: ' (you)',
+    seedV: 'Starting words', seedSub: 'Next: find one word linking these', match: 'MATCH!', clear: 'CLEARED!', miss: 'No match!', timeout: 'Time\'s up!',
+    upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Beat Level 10!', hurtSub: '💔 -1 life · {h} left', deadSub: '💀 Out of lives!', missSub: 'Sync up next round!',
+    nextIn: 'Next round in {s}s',
+    prepNote: 'Hands on the keyboard. The first round opens with random words.', seedNote: 'Remember these. Next round, type one word that relates to all of them.',
+    watchNote: 'You are watching this game.', lockedNote: 'Locked in <b>{w}</b>. Waiting for your teammate…', linkNote: 'Link <b>{a}</b> with one word.', linkJoin: '</b> and <b>',
+    againNote: 'Look at the last words and guess what your teammate will type.', missNote: 'No match yet. The timer restarts in a few seconds, get ready to type a new word.',
+    pickNote: 'You set the topic this round. Type one or pick below.', sentTopic: 'Topic sent…', waitPick: 'Waiting for <b>{p}</b> to choose. After 20 seconds a random topic is used.',
+    wordPh: 'Type your word…', lock: 'Lock in', topicPh: 'This round\'s topic…', setTopic: 'Set',
+    secs: 'sec', pickL: 'topic', startL: 'start',
+    histTitle: 'Rounds played', histNone: 'No rounds yet.', histAfter: 'Words appear here once revealed.', roundCol: 'Round',
+    boss: '👑 Final boss', bossSub: 'Only 2 lives!', nextLv: 'Match to reach Level {n}', lives: '{h} lives',
+    waitRestart: 'Waiting for {h} to restart…', requeue: 'Find another match', leftT: 'A player left', leftSub: 'The game was stopped.', backLobby: 'Back to lobby',
+    clearT: 'TOTAL VICTORY!', clearBody: 'All {n} players beat 10 levels, finishing on <b>{w}</b>.', titleUnlocked: 'Title unlocked', TITLE: 'Supreme Telepath',
+    statRounds: 'rounds', statLives: 'lives left', restart: 'Play again from Level 1', restart20: 'Restart at Level 1 (❤️ 20)',
+    deadBody: 'Out of lives at <b>{l}</b> after {r} rounds.', who2: '', who3: '', statLv: 'levels cleared', statPlayed: 'rounds played',
+    teamWins: '{t} wins', youWin: 'Your team wins!', theyWin: 'The other team was faster', howMatch: 'matched after {r} rounds', howTimeout: 'because the other team ran out of time',
+    yourTimeout: 'Your team ran out of time.', newGame: 'New game',
+    notConnected: 'Not connected yet', busy: 'Server busy, try again shortly', cantJoin: 'Couldn\'t join the room', lost: 'Lost connection to the room',
+    needPlayers: 'Needs {n} players', teamsOf2: 'Each team needs exactly 2 players', used: '"{w}" was already used, pick another', code4: 'Room codes have 4 characters', anon: 'Anonymous',
+    seedRes: '🎲 Random starting words', matchRes: 'MATCH! ⭐ Level up', missRes: '💔 No match · -1 life', someone: 'Someone',
+  },
 };
-const TYPES = {
-  free: { name:'Không chủ đề', sub:'Chế độ chính, gõ gì cũng được' },
-  rand: { name:'Chủ đề ngẫu nhiên', sub:'Mỗi level một chủ đề chung' },
-  turn: { name:'Luân phiên chọn', sub:'Mỗi vòng một người ra đề' },
+const LANGS = ['vi', 'en'];
+
+// ---------- game constants ----------
+const MODES = { coop2: { n: 2, teams: 1, levels: true }, vs22: { n: 4, teams: 2 }, coop3: { n: 3, teams: 1, levels: true } };
+const TYPES = { free: {}, rand: {}, turn: {} };
+const TOPICS = {
+  vi: ['Trái cây','Động vật','Món ăn Việt','Đồ uống','Nghề nghiệp','Thể thao','Phương tiện','Màu sắc','Đồ dùng học tập','Đồ trong bếp','Quốc gia','Tỉnh thành Việt Nam','Nhạc cụ','Loài hoa','Thời tiết','Bộ phận cơ thể','Quần áo','Đồ điện tử','Phim hoạt hình','Siêu anh hùng','Môn học','Ngày lễ','Ở biển','Rau củ','Bánh kẹo','Trò chơi dân gian','Côn trùng','Loài chim','Đồ chơi','Mạng xã hội','Vũ trụ','Đồ nội thất','Tính cách','Cảm xúc','Kỳ nghỉ hè','Ngày Tết','Quán cà phê','Trường học','Bệnh viện','Sở thú','Siêu thị','Đám cưới','Trò chơi điện tử','Ca sĩ','Mùa đông','Hải sản','Kem','Phim kinh dị','Cổ tích','Thú cưng'],
+  en: ['Fruit','Animals','Street food','Drinks','Jobs','Sports','Vehicles','Colors','School supplies','Kitchen','Countries','Big cities','Instruments','Flowers','Weather','Body parts','Clothes','Gadgets','Cartoons','Superheroes','School subjects','Holidays','At the beach','Vegetables','Sweets','Board games','Insects','Birds','Toys','Social media','Space','Furniture','Personality','Feelings','Summer break','New Year','Coffee shop','School','Hospital','Zoo','Supermarket','Weddings','Video games','Singers','Winter','Seafood','Ice cream','Horror movies','Fairy tales','Pets'],
 };
-const TOPICS = ['Trái cây','Động vật','Món ăn Việt','Đồ uống','Nghề nghiệp','Thể thao','Phương tiện','Màu sắc','Đồ dùng học tập','Đồ trong bếp','Quốc gia','Tỉnh thành Việt Nam','Nhạc cụ','Loài hoa','Thời tiết','Bộ phận cơ thể','Quần áo','Đồ điện tử','Phim hoạt hình','Siêu anh hùng','Môn học','Ngày lễ','Ở biển','Rau củ','Bánh kẹo','Trò chơi dân gian','Côn trùng','Loài chim','Đồ chơi','Mạng xã hội','Vũ trụ','Đồ nội thất','Tính cách','Cảm xúc','Kỳ nghỉ hè','Ngày Tết','Quán cà phê','Trường học','Bệnh viện','Sở thú','Siêu thị','Đám cưới','Trò chơi điện tử','Ca sĩ','Mùa đông','Hải sản','Kem','Phim kinh dị','Cổ tích','Thú cưng'];
-const TEAM_NAMES = ['Đội Cam','Đội Lam'];
-const TEAM_COLS = ['tang','sky'];
-const PCOLS = ['tang','sky','lilac','mint','sun','rose'];
-const WORD_SEC = 30, PICK_SEC = 20, REVEAL_MS = 4200, COUNT_MS = 3000;
+const WORDS = {
+  vi: ['mèo','biển','núi','mưa','cà phê','trăng','sách','xe đạp','bánh mì','điện thoại','hoa sen','gió','đồng hồ','tàu hỏa','chó','lửa','tuyết','kẹo','gương','cầu vồng','bóng đá','đàn guitar','áo dài','phở','cây dừa','con cá','ngôi sao','trường học','ô','máy bay','sư tử','chìa khóa','bánh chưng','đèn lồng','kem','giày','bút chì','cái ghế','mặt trời','rừng','sông','đảo','gấu trúc','khủng long','robot','pizza','trà sữa','tivi','búp bê','con ong','lá cây','vàng','kim cương','bánh sinh nhật','pháo hoa','ma','phù thủy','công chúa','hải tặc','vũ trụ','tên lửa','bệnh viện','chợ','xe buýt','con voi','cá heo','cánh cụt','dưa hấu','xoài','tỏi','ớt','muối','mật ong','sữa','trứng','gà','vịt','tôm','cua','kẹo bông','bóng bay','diều','xích đu','bảng đen','phấn','máy tính','tai nghe','camera','nhạc','ngủ','mơ','cười','khóc','sợ','mùa hè','mùa thu','Tết','Giáng sinh','đám cưới','sinh nhật','du lịch','cắm trại','bãi biển','sa mạc','núi lửa','băng','thác nước','hang động','lâu đài','kim tự tháp','ninja','siêu nhân','zombie','quái vật','thiên thần','rồng','kỳ lân','nấm','cà rốt','bắp','khoai tây','bánh xèo','chè','trà','nước','lửa trại','đèn pin','bản đồ','la bàn','thuyền','cá voi','sao biển','san hô','cát','vỏ sò'],
+  en: ['cat','ocean','mountain','rain','coffee','moon','book','bicycle','bread','phone','lotus','wind','clock','train','dog','fire','snow','candy','mirror','rainbow','soccer','guitar','dress','noodles','palm tree','fish','star','school','umbrella','airplane','lion','key','cake','lantern','ice cream','shoes','pencil','chair','sun','forest','river','island','panda','dinosaur','robot','pizza','bubble tea','television','doll','bee','leaf','gold','diamond','birthday','fireworks','ghost','witch','princess','pirate','space','rocket','hospital','market','bus','elephant','dolphin','penguin','watermelon','mango','garlic','chili','salt','honey','milk','egg','chicken','duck','shrimp','crab','cotton candy','balloon','kite','swing','chalk','computer','headphones','camera','music','sleep','dream','laugh','cry','fear','summer','autumn','Christmas','wedding','travel','camping','beach','desert','volcano','ice','waterfall','cave','castle','pyramid','ninja','superhero','zombie','monster','angel','dragon','unicorn','mushroom','carrot','corn','potato','pancake','tea','water','campfire','flashlight','map','compass','boat','whale','starfish','coral','sand','shell','vampire','pumpkin','spider','queen','king','jungle','tiger','tornado','thunder','museum','library','hamburger','sushi','chocolate','cookie','popcorn'],
+};
+const TEAM_COLS = ['tang', 'sky'];
+const PCOLS = ['tang', 'sky', 'lilac', 'mint', 'sun', 'rose'];
+const WORD_SEC = 30, PICK_SEC = 20, REVEAL_MS = 4200, SEED_MS = 5200, COUNT_MS = 3000;
 const MAX_LV = 10;
 const maxHp = lv => 22 - 2 * lv; // 20,18,...,4,2
-const TITLE = 'Thần Giao Cách Cảm Tối Thượng';
-const SEED_MS = 5200;
-const WORDS = ['mèo','biển','núi','mưa','cà phê','trăng','sách','xe đạp','bánh mì','điện thoại','hoa sen','gió','đồng hồ','tàu hỏa','chó','lửa','tuyết','kẹo','gương','cầu vồng','bóng đá','đàn guitar','áo dài','phở','cây dừa','con cá','ngôi sao','trường học','ô','máy bay','sư tử','chìa khóa','bánh chưng','đèn lồng','kem','giày','bút chì','cái ghế','mặt trời','rừng','sông','đảo','gấu trúc','khủng long','robot','pizza','trà sữa','tivi','búp bê','con ong','lá cây','vàng','kim cương','bánh sinh nhật','pháo hoa','ma','phù thủy','công chúa','hải tặc','vũ trụ','tên lửa','bệnh viện','chợ','xe buýt','con voi','cá heo','cánh cụt','dưa hấu','xoài','tỏi','ớt','muối','đường','mật ong','sữa','trứng','gà','vịt','tôm','cua','kẹo bông','bóng bay','diều','xích đu','sách giáo khoa','bảng đen','phấn','máy tính','tai nghe','camera','nhạc','vẽ','ngủ','mơ','cười','khóc','yêu','sợ','mùa hè','mùa thu','Tết','Giáng sinh','đám cưới','sinh nhật','du lịch','cắm trại','bãi biển','sa mạc','núi lửa','băng','thác nước','hang động','lâu đài','kim tự tháp','ninja','siêu nhân','zombie','quái vật','thiên thần','rồng','kỳ lân','nấm','cà rốt','bắp','khoai tây','bánh xèo','nem','chè','trà','rượu','bia','nước','lửa trại','đèn pin','bản đồ','la bàn','thuyền','cá voi','sao biển','san hô','cát','vỏ sò'];
-function pickWords(n, avoid) {
-  const out = [], bad = new Set((avoid || []).map(w => norm(w)));
-  while (out.length < n) { const w = WORDS[Math.random() * WORDS.length | 0]; if (!bad.has(norm(w)) && !out.includes(w)) out.push(w); }
-  return out;
-}
 const RING_C = 2 * Math.PI * 52;
 const HEART = '<path d="M12 21s-7.4-4.5-9.5-9.2C1 8.4 3.1 5 6.6 5c2.1 0 3.6 1.2 5.4 3.1C13.8 6.2 15.3 5 17.4 5 20.9 5 23 8.4 21.5 11.8 19.4 16.5 12 21 12 21z"/>';
 
@@ -518,45 +613,79 @@ function hash(str, seed = 0) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
-const randTopic = (not) => { let t; do t = TOPICS[Math.floor(Math.random() * TOPICS.length)]; while (t === not); return t; };
 const store = {
   get(k, d) { try { const v = localStorage.getItem('dt_' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem('dt_' + k, JSON.stringify(v)); } catch {} },
 };
-function randomName() {
-  const a = ['Mèo','Cáo','Gấu','Cú','Thỏ','Hổ','Sóc','Rái cá','Cánh cụt','Gà'];
-  const b = ['Lười','Tinh Ý','Mơ Màng','Lém Lỉnh','Hiền','Nhanh Nhảu','Bí Ẩn'];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let toastT;
+function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
+
+// ---------- state ----------
+const S = {
+  lang: LANGS.includes(store.get('lang', '')) ? store.get('lang', '') : ((navigator.language || '').toLowerCase().startsWith('vi') ? 'vi' : 'en'),
+  name: '', mode: store.get('mode', 'coop2'), type: store.get('type', 'free'),
+  screen: 'home', net: 'connecting', lobby: null, connected: undefined,
+  room: null, roomName: '', roomKind: '', roomJoinAt: 0, ja: 0, joining: false,
+  seeking: null, qStart: 0,
+  ps: [], byPeer: {}, hostPeer: null, amHost: false,
+  G: null, hostG: null, lastPub: '',
+  my: { gid: null, words: [], lock: null }, pending: null,
+  missing: new Map(), hostOverAt: 0,
+  keys: {}, celebrated: new Set(), hpSeen: null,
+};
+if (!MODES[S.mode]) S.mode = 'coop2';
+if (!TYPES[S.type]) S.type = 'free';
+
+// t(key, vars): text in the viewer's language
+function t(key, vars) {
+  let s = T[S.lang][key]; if (s == null) s = T.vi[key]; if (s == null) return key;
+  if (vars && typeof s === 'string') s = s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+  return s;
+}
+function randomName(lang) {
+  if (lang === 'en') {
+    const a = ['Sleepy','Swift','Dreamy','Clever','Sneaky','Gentle','Mystic','Lucky'], b = ['Fox','Panda','Owl','Otter','Tiger','Penguin','Koala','Bunny'];
+    return a[Math.random() * a.length | 0] + ' ' + b[Math.random() * b.length | 0];
+  }
+  const a = ['Mèo','Cáo','Gấu','Cú','Thỏ','Hổ','Sóc','Rái cá','Cánh cụt','Gà'], b = ['Lười','Tinh Ý','Mơ Màng','Lém Lỉnh','Hiền','Nhanh Nhảu','Bí Ẩn'];
   return a[Math.random() * a.length | 0] + ' ' + b[Math.random() * b.length | 0];
 }
-let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+S.name = store.get('name', '') || randomName(S.lang);
+
+// random words and topics follow the ROOM's language, not each viewer's
+function pickWords(n, lang) {
+  const list = WORDS[lang] || WORDS.vi, out = [];
+  while (out.length < n) { const w = list[Math.random() * list.length | 0]; if (!out.includes(w)) out.push(w); }
+  return out;
+}
+function randTopic(not, lang) { const list = TOPICS[lang] || TOPICS.vi; let x; do x = list[Math.random() * list.length | 0]; while (x === not); return x; }
 
 // ---------- network: WebSocket to our own server ----------
 function makeWsNet() {
   const url = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
   let me = 'p' + Math.random().toString(36).slice(2, 12).replace(/[^a-z0-9]/g, '') + 'x';
-  let ws = null, open = false;
-  const rooms = new Map(), connHs = new Set();
+  let ws = null, open = false, offset = null;
+  const rooms = new Map(), connHs = new Set(), tickHs = new Set();
   const send = m => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
+  // server clock: a message is never received before it is sent, so the largest observed offset is the closest
+  const seeClock = now => { if (typeof now !== 'number') return; const o = now - Date.now(); if (offset == null || o > offset) offset = o; };
   function mk(name) {
     let mine = {}, myAt = Date.now(), list = [], snap = Object.freeze([]), pend = false;
     const hs = new Set();
     const rebuild = () => {
       snap = Object.freeze([
-        { peer: me, isMe: true, sameTab: true, kind: 'viewer', guest: false, by: null, presence: mine, updatedAt: myAt },
-        ...list.filter(p => p.peer !== me).map(p => ({ peer: p.peer, isMe: false, sameTab: false, kind: 'viewer', guest: false, by: null, presence: p.presence, updatedAt: p.at })),
+        { peer: me, isMe: true, sameTab: true, kind: 'viewer', presence: mine, updatedAt: myAt },
+        ...list.filter(p => p.peer !== me).map(p => ({ peer: p.peer, isMe: false, sameTab: false, kind: 'viewer', presence: p.presence, updatedAt: p.at })),
       ]);
-      if (!pend) { pend = true; setTimeout(() => { pend = false; hs.forEach(h => h({ peers: snap, joined: [], left: [], updated: [] })); }, 0); }
+      if (!pend) { pend = true; setTimeout(() => { pend = false; hs.forEach(h => h({ peers: snap })); }, 0); }
     };
     const r = {
       name,
       presence(patch) { mine = { ...mine }; for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; } myAt = Date.now(); send({ t: 'presence', room: name, patch }); rebuild(); return Promise.resolve(); },
       peers: () => snap,
-      onPeers(h) { hs.add(h); setTimeout(() => h({ peers: snap, joined: snap, left: [], updated: [] }), 0); return () => hs.delete(h); },
-      connected: () => open,
+      onPeers(h) { hs.add(h); setTimeout(() => h({ peers: snap }), 0); return () => hs.delete(h); },
       onConnection(h) { connHs.add(h); setTimeout(() => h(open), 0); return () => connHs.delete(h); },
-      emit: () => Promise.resolve(), on: () => () => {},
       leave() { send({ t: 'leave', room: name }); rooms.delete(name); hs.clear(); return Promise.resolve(); },
       _set(peers) {
         list = peers.map(p => {
@@ -576,9 +705,11 @@ function makeWsNet() {
     ws.onmessage = e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       if (m.t === 'hello') {
+        seeClock(m.now);
         if (m.id !== me) { me = m.id; rooms.forEach(r => r._rebuild()); }
         open = true; rooms.forEach(r => r._join()); connHs.forEach(h => h(true));
       } else if (m.t === 'peers') { const r = rooms.get(m.room); if (r) r._set(m.peers || []); }
+      else if (m.t === 'tick') { seeClock(m.now); tickHs.forEach(h => h()); }
     };
     ws.onclose = () => { if (open) { open = false; connHs.forEach(h => h(false)); } setTimeout(connect, 1500); };
     ws.onerror = () => { try { ws.close(); } catch {} };
@@ -586,38 +717,26 @@ function makeWsNet() {
   connect();
   const lobby = mk('__lobby');
   lobby.join = async n => rooms.get(n) || mk(n);
-  lobby.leave = () => Promise.resolve();
+  lobby.now = () => Date.now() + (offset || 0);
+  lobby.onTick = h => tickHs.add(h);
   return lobby;
 }
+// shared clock: every timer in the game is measured against server time, so all players count down together
+const now = () => (S.lobby && S.lobby.now ? S.lobby.now() : Date.now());
 
-// ---------- state ----------
-const S = {
-  name: store.get('name', '') || randomName(),
-  color: store.get('color', PCOLS[Math.random() * PCOLS.length | 0]),
-  mode: store.get('mode', 'coop2'), type: store.get('type', 'free'),
-  screen: 'home', net: 'connecting', netKind: null, lobby: null,
-  room: null, roomName: '', roomKind: '', roomJoinAt: 0, ja: 0, joining: false,
-  seeking: null, qStart: 0,
-  ps: [], byPeer: {}, hostPeer: null, amHost: false,
-  G: null, hostG: null, lastPub: '',
-  my: { gid: null, words: [], lock: null }, pending: null,
-  starts: new Map(), missing: new Map(), hostOverAt: 0,
-  keys: {}, celebrated: new Set(), hpSeen: null,
-};
-if (!MODES[S.mode]) S.mode = 'coop2';
-if (!TYPES[S.type]) S.type = 'free';
-
+// ---------- helpers on room state ----------
 const myPeer = () => { const r = S.room || S.lobby; const p = r && r.peers().find(p => p.isMe && p.sameTab); return p ? p.peer : null; };
 const pres = peer => (S.byPeer[peer] && S.byPeer[peer].presence) || {};
-const pName = peer => pres(peer).name || 'Ai đó';
-const pCol = peer => PCOLS.includes(pres(peer).col) ? pres(peer).col : 'lilac';
+const pName = peer => pres(peer).name || t('someone');
+function pCol(peer) { const i = S.ps.findIndex(p => p.peer === peer); return PCOLS[(i < 0 ? 2 : i) % PCOLS.length]; }
 const avatar = peer => `<span class="av" style="background:var(--${pCol(peer)})">${esc((pName(peer).trim()[0] || '?').toUpperCase())}</span>`;
 function pub(patch) { if (S.room) S.room.presence(patch).catch(() => {}); }
 const myTeam = () => { const G = S.G, me = myPeer(); if (!G || !G.members) return -1; return G.members.findIndex(a => a.includes(me)); };
 const dispTeam = () => Math.max(0, myTeam());
 const isCoop = G => G && MODES[G.mode] && MODES[G.mode].levels;
-const phaseKey = (G, ti, tm) => `${G.id}|${ti}|${tm.r}|${tm.ph}`;
-const elapsed = k => S.starts.has(k) ? Date.now() - S.starts.get(k) : 0;
+const roomLang = () => (S.G && LANGS.includes(S.G.lang) ? S.G.lang : S.lang);
+const phaseEl = tm => (tm && tm.at ? now() - tm.at : 0);
+const teamName = i => t('teams')[i];
 function wordsOf(peer) {
   if (peer === myPeer()) return S.my.words;
   const p = pres(peer); return (S.G && p.wg === S.G.id && Array.isArray(p.words)) ? p.words : [];
@@ -637,20 +756,20 @@ function roundWords(ti, r) {
   return ((G.members && G.members[ti]) || []).map(p => wordsOf(p)[r - 1]);
 }
 
-// ---------- network ----------
+// ---------- network wiring ----------
 async function initNet() {
-  S.netKind = 'ws';
   let api;
   try { api = makeWsNet(); } catch { S.net = 'offline'; render(); return; }
   S.lobby = api; S.net = 'online';
   api.onPeers(() => { matchTick(); scheduleRender(); });
   api.onConnection(c => { S.connected = c; scheduleRender(); });
-  api.presence({ v: 1, name: S.name, col: S.color }).catch(() => {});
+  api.onTick(() => hostTick());
+  api.presence({ v: 1, name: S.name, lang: S.lang }).catch(() => {});
   render();
 }
 
 async function joinRoom(name, kind) {
-  if (!S.lobby) { toast('Chưa kết nối được phòng chơi'); return; }
+  if (!S.lobby) { toast(t('notConnected')); return; }
   if (S.joining) return;
   S.joining = true;
   let r;
@@ -659,15 +778,15 @@ async function joinRoom(name, kind) {
     r = await S.lobby.join(name);
   } catch (e) {
     S.joining = false;
-    toast(e && e.code === 'limit_reached' ? 'Máy chủ đang bận, thử lại sau ít giây' : 'Không vào được phòng'); return;
+    toast(e && e.code === 'limit_reached' ? t('busy') : t('cantJoin')); return;
   }
   S.joining = false;
   Object.assign(S, { room: r, roomName: name, roomKind: kind, roomJoinAt: Date.now(), ja: 0, G: null, hostG: null, lastPub: '', pending: null,
     my: { gid: null, words: [], lock: null }, ps: [], byPeer: {}, amHost: false, hostPeer: null, hpSeen: null });
-  S.starts.clear(); S.missing.clear(); S.keys = {};
+  S.missing.clear(); S.keys = {};
   S.screen = 'room';
-  r.onPeers(() => sync(), e => { if (e && (e.code === 'revoked' || e.code === 'not_granted')) { toast('Mất kết nối phòng'); leaveRoom(); } });
-  await r.presence({ name: S.name, col: S.color }).catch(() => {});
+  r.onPeers(() => sync());
+  await r.presence({ name: S.name, lang: S.lang }).catch(() => {});
   render();
   await sleep(900);
   if (S.room !== r) return;
@@ -675,7 +794,7 @@ async function joinRoom(name, kind) {
   const maxJa = others.reduce((m, p) => Math.max(m, +p.presence.ja || 0), 0);
   S.ja = Math.max(Date.now(), maxJa + 1);
   const t0 = others.filter(p => (p.presence.team | 0) === 0).length, t1 = others.filter(p => p.presence.team === 1).length;
-  await r.presence({ v: 1, ja: S.ja, name: S.name, col: S.color, team: t1 < t0 ? 1 : 0 }).catch(() => {});
+  await r.presence({ v: 1, ja: S.ja, name: S.name, lang: S.lang, team: t1 < t0 ? 1 : 0 }).catch(() => {});
   sync();
 }
 
@@ -687,21 +806,22 @@ async function leaveRoom(silent, keepSeek) {
   if (!silent) { S.screen = 'home'; render(); }
 }
 
+// queue room names: q-<lang>-<mode>-<type>-<hash>
 function newLobbyG() {
-  let mode = S.mode, type = S.type, auto = false;
-  if (S.roomKind === 'queue') { const p = S.roomName.split('-'); if (MODES[p[1]]) mode = p[1]; if (TYPES[p[2]]) type = p[2]; auto = true; }
-  return { id: 0, mode, type, st: 'lobby', auto, members: [], teams: [], topic: null, win: null, why: null };
+  let mode = S.mode, type = S.type, lang = S.lang, auto = false;
+  if (S.roomKind === 'queue') { const p = S.roomName.split('-'); if (LANGS.includes(p[1])) lang = p[1]; if (MODES[p[2]]) mode = p[2]; if (TYPES[p[3]]) type = p[3]; auto = true; }
+  return { id: 0, mode, type, lang, st: 'lobby', auto, members: [], teams: [], topic: null, win: null, why: null };
 }
 
 function publishG() {
   const s = JSON.stringify(S.hostG);
   if (s !== S.lastPub) { S.lastPub = s; pub({ g: JSON.parse(s) }); }
-  S.G = S.hostG; observe(); clientReact(); scheduleRender();
+  S.G = S.hostG; clientReact(); scheduleRender();
 }
 
 function sync() {
   if (!S.room) return;
-  const ps = S.room.peers().filter(p => p.kind !== 'agent' && p.presence && p.presence.v === 1 && p.presence.ja)
+  const ps = S.room.peers().filter(p => p.presence && p.presence.v === 1 && p.presence.ja)
     .slice().sort((a, b) => (a.presence.ja - b.presence.ja) || (a.peer < b.peer ? -1 : 1));
   S.ps = ps; S.byPeer = {}; for (const p of ps) S.byPeer[p.peer] = p;
   const h = ps[0]; const wasHost = S.amHost;
@@ -713,13 +833,7 @@ function sync() {
   if (wasHost) { pub({ g: null }); S.hostG = null; }
   const g = h && h.presence.g;
   if (g && typeof g === 'object' && MODES[g.mode]) S.G = g;
-  observe(); clientReact(); scheduleRender();
-}
-
-function observe() {
-  const G = S.G; if (!G) return;
-  if (G.st === 'count') { const k = G.id + '|count'; if (!S.starts.has(k)) S.starts.set(k, Date.now()); }
-  if ((G.st === 'play' || G.st === 'over') && Array.isArray(G.teams)) G.teams.forEach((tm, ti) => { const k = phaseKey(G, ti, tm); if (!S.starts.has(k)) S.starts.set(k, Date.now()); });
+  clientReact(); scheduleRender();
 }
 
 function clientReact() {
@@ -746,40 +860,42 @@ function clientReact() {
 }
 
 // ---------- host authority ----------
+// every phase change stamps the shared clock, so all players see the same countdown
+function setPh(tm, ph) { tm.ph = ph; tm.at = now(); }
 function startGame() {
   const g = S.hostG; if (!g) return;
   const m = MODES[g.mode]; const ps = S.ps;
-  if (ps.length < m.n) { toast(`Cần đủ ${m.n} người`); return; }
+  if (ps.length < m.n) { toast(t('needPlayers', { n: m.n })); return; }
   let members;
   if (m.teams === 1) members = [ps.slice(0, m.n).map(p => p.peer)];
   else if (g.auto) members = [[ps[0].peer, ps[1].peer], [ps[2].peer, ps[3].peer]];
   else {
     const a = ps.filter(p => (p.presence.team | 0) === 0).slice(0, 2), b = ps.filter(p => p.presence.team === 1).slice(0, 2);
-    if (a.length < 2 || b.length < 2) { toast('Mỗi đội cần đúng 2 người'); return; }
+    if (a.length < 2 || b.length < 2) { toast(t('teamsOf2')); return; }
     members = [a.map(p => p.peer), b.map(p => p.peer)];
   }
-  Object.assign(g, { id: g.id + 1, members, topic: g.type === 'rand' ? randTopic() : null, st: 'count', teams: [], win: null, why: null });
+  Object.assign(g, { id: g.id + 1, members, topic: g.type === 'rand' ? randTopic(null, g.lang) : null, st: 'count', cAt: now(), teams: [], win: null, why: null });
   if (m.levels) Object.assign(g, { lvl: 1, hp: maxHp(1), lvStart: 1, rl: [1] });
   else { delete g.lvl; delete g.hp; delete g.lvStart; delete g.rl; }
   publishG();
 }
+function seedRound(tm, words) {
+  setPh(tm, 'reveal'); tm.res = 'seed'; tm.fx = null;
+  tm.seeds = tm.seeds || {}; tm.seeds[tm.r] = words;
+}
 function beginPlay(g) {
   g.st = 'play'; g.win = null; g.why = null; S.hostOverAt = 0; S.missing.clear();
-  g.teams = g.members.map(() => ({ r: 1, ph: 'word', t: g.type === 'rand' ? g.topic : null, res: null, fx: null, seeds: {} }));
+  g.teams = g.members.map(() => ({ r: 1, ph: 'word', at: now(), t: g.type === 'rand' ? g.topic : null, res: null, fx: null, seeds: {} }));
   // opening round: random words instead of typed ones (same words for both teams in 2v2)
-  const words = pickWords(g.members[0].length);
+  const words = pickWords(g.members[0].length, g.lang);
   g.teams.forEach(tm => seedRound(tm, words));
-}
-function seedRound(tm, words) {
-  tm.ph = 'reveal'; tm.res = 'seed'; tm.fx = null;
-  tm.seeds = tm.seeds || {}; tm.seeds[tm.r] = words;
 }
 function applyCoop(g, tm, res) {
   if (res === 'match') {
     if (g.lvl >= MAX_LV) { tm.fx = 'clear'; g.win = 0; g.why = 'clear'; }
     else {
       g.lvl++; g.hp = maxHp(g.lvl); g.lvStart = tm.r + 1; tm.fx = 'up';
-      if (g.type === 'rand') g.topic = randTopic(g.topic);
+      if (g.type === 'rand') g.topic = randTopic(g.topic, g.lang);
     }
   } else {
     g.hp = Math.max(0, g.hp - 1);
@@ -788,61 +904,63 @@ function applyCoop(g, tm, res) {
 }
 function hostTick() {
   if (!S.amHost || !S.hostG || !S.room) return;
-  const g = S.hostG, P = S.byPeer, now = Date.now(); let ch = false;
+  const g = S.hostG, P = S.byPeer, clock = Date.now(); let ch = false;
   const coop = isCoop(g);
   if (g.st === 'lobby' && g.auto && g.id === 0 && S.ps.length >= MODES[g.mode].n) { startGame(); return; }
-  if (g.st === 'count' && elapsed(g.id + '|count') >= COUNT_MS) { beginPlay(g); ch = true; }
+  if (g.st === 'count' && now() - (g.cAt || 0) >= COUNT_MS) { beginPlay(g); ch = true; }
   if (g.st === 'play') {
     for (const m of g.members.flat()) {
       if (P[m]) { S.missing.delete(m); continue; }
-      if (!S.missing.has(m)) S.missing.set(m, now);
-      else if (now - S.missing.get(m) > 5000) { g.st = 'over'; g.win = -2; g.why = 'left'; ch = true; break; }
+      if (!S.missing.has(m)) S.missing.set(m, clock);
+      else if (clock - S.missing.get(m) > 5000) { g.st = 'over'; g.win = -2; g.why = 'left'; ch = true; break; }
     }
     if (g.st === 'play') g.teams.forEach((tm, ti) => {
       if (tm.ph === 'done') return;
-      const mem = g.members[ti]; const el = elapsed(phaseKey(g, ti, tm));
+      const mem = g.members[ti]; const el = phaseEl(tm);
       if (tm.ph === 'pick') {
         const pk = mem[(tm.r - 1) % mem.length]; const pp = P[pk] && P[pk].presence.pick;
-        if (pp && pp.g === g.id && pp.r === tm.r && cleanTopic(pp.t)) { tm.t = cleanTopic(pp.t); tm.ph = 'word'; ch = true; }
-        else if (el > PICK_SEC * 1000 + 400) { tm.t = randTopic(); tm.ph = 'word'; ch = true; }
+        if (pp && pp.g === g.id && pp.r === tm.r && cleanTopic(pp.t)) { tm.t = cleanTopic(pp.t); setPh(tm, 'word'); ch = true; }
+        else if (el > PICK_SEC * 1000 + 400) { tm.t = randTopic(null, g.lang); setPh(tm, 'word'); ch = true; }
       } else if (tm.ph === 'word') {
         const locks = mem.map(m => P[m] && P[m].presence.lock);
         const all = locks.every(l => l && l.g === g.id && l.r === tm.r && typeof l.h === 'string');
         if (all || el > WORD_SEC * 1000 + 600) {
           const res = all ? (locks.every(l => l.h === locks[0].h) ? 'match' : 'miss') : 'timeout';
           tm.res = res; ch = true;
-          if (coop) { tm.ph = 'reveal'; applyCoop(g, tm, res); }
-          else if (res === 'timeout') { tm.ph = 'done'; if (g.win == null) { g.win = 1 - ti; g.why = 'timeout'; } }
-          else { tm.ph = 'reveal'; if (res === 'match' && g.win == null) { g.win = ti; g.why = 'match'; } }
+          if (coop) { setPh(tm, 'reveal'); applyCoop(g, tm, res); }
+          else if (res === 'timeout') { setPh(tm, 'done'); if (g.win == null) { g.win = 1 - ti; g.why = 'timeout'; } }
+          else { setPh(tm, 'reveal'); if (res === 'match' && g.win == null) { g.win = ti; g.why = 'match'; } }
         }
       } else if (tm.ph === 'reveal' && el > (tm.res === 'seed' ? SEED_MS : REVEAL_MS)) {
-        if (tm.res !== 'seed' && (coop ? g.win != null : tm.res === 'match')) tm.ph = 'done';
+        if (tm.res !== 'seed' && (coop ? g.win != null : tm.res === 'match')) setPh(tm, 'done');
         else {
-          tm.r++; tm.ph = g.type === 'turn' ? 'pick' : 'word';
+          // next round: the timer starts again by itself and everyone types a new word
+          tm.r++; setPh(tm, g.type === 'turn' ? 'pick' : 'word');
           tm.t = g.type === 'turn' ? null : (g.type === 'rand' ? g.topic : null);
           tm.res = null; tm.fx = null;
           if (coop) g.rl[tm.r - 1] = g.lvl;
           // a new level opens with fresh random words
-          if (coop && tm.r === g.lvStart && tm.r > 1) seedRound(tm, pickWords(mem.length));
+          if (coop && tm.r === g.lvStart && tm.r > 1) seedRound(tm, pickWords(mem.length, g.lang));
         }
         ch = true;
       }
     });
     if (g.st === 'play' && g.win != null) {
-      if (!S.hostOverAt) S.hostOverAt = now;
-      const settled = g.teams.every(t => t.ph !== 'reveal');
-      if (now - S.hostOverAt > 1300 && settled) { g.st = 'over'; ch = true; }
+      if (!S.hostOverAt) S.hostOverAt = clock;
+      const settled = g.teams.every(x => x.ph !== 'reveal');
+      if (clock - S.hostOverAt > 1300 && settled) { g.st = 'over'; ch = true; }
     }
   }
   if (ch) publishG();
 }
 
-// ---------- matchmaking ----------
+// ---------- matchmaking (same language only) ----------
+const seekKey = () => S.lang + '-' + S.mode + '-' + S.type;
 function lobbyMe() { return S.lobby && S.lobby.peers().find(p => p.isMe && p.sameTab); }
 function startSeek() {
-  if (!S.lobby) { toast('Chưa kết nối được phòng chơi'); return; }
-  S.seeking = { k: S.mode + '-' + S.type, since: Date.now() };
-  S.lobby.presence({ v: 1, name: S.name, col: S.color, seek: S.seeking }).catch(() => {});
+  if (!S.lobby) { toast(t('notConnected')); return; }
+  S.seeking = { k: seekKey(), since: Date.now() };
+  S.lobby.presence({ v: 1, name: S.name, lang: S.lang, seek: S.seeking }).catch(() => {});
   S.screen = 'queue'; S.qStart = Date.now(); render(); matchTick();
 }
 function cancelSeek() {
@@ -871,10 +989,10 @@ function matchTick() {
   const taken = new Set();
   all.forEach(p => { const s = p.presence.seek; if (s.room) { taken.add(p.peer); (s.with || []).forEach(x => taken.add(x)); } });
   const avail = all.filter(p => !taken.has(p.peer)).sort((a, b) => (a.presence.seek.since - b.presence.seek.since) || (a.peer < b.peer ? -1 : 1));
-  const n = MODES[k.split('-')[0]].n;
+  const n = MODES[k.split('-')[1]].n;
   if (avail.length >= n && avail[0].isMe && avail[0].sameTab) {
     const grp = avail.slice(0, n).map(p => p.peer);
-    const room = ('q-' + k + '-' + hash(grp.join(',') + Date.now())).slice(0, 40);
+    const room = ('q-' + k + '-' + hash(grp.join(',') + Date.now())).slice(0, 44);
     S.seeking = { ...S.seeking, room, with: grp };
     S.lobby.presence({ seek: S.seeking }).catch(() => {});
     joinRoom(room, 'queue');
@@ -888,13 +1006,13 @@ function submitWord() {
   const tm = G.teams[ti]; if (tm.ph !== 'word' || (S.my.lock && S.my.lock.r === tm.r)) return;
   const w = norm(inp.value);
   if (!w) { bump(inp); return; }
-  if (usedWords(ti).has(w)) { bump(inp); toast(`"${w}" đã gõ rồi, chọn từ khác nhé`); return; }
+  if (usedWords(ti).has(w)) { bump(inp); toast(t('used', { w })); return; }
   S.pending = { r: tm.r, w };
   S.my.lock = { g: G.id, r: tm.r, h: hash(w + '|' + S.roomName + '|' + G.id + '|' + ti + '|' + tm.r) };
   pub({ lock: S.my.lock }); inp.value = ''; render();
 }
-function submitPick(t) {
-  const G = S.G; const ti = myTeam(); const topic = cleanTopic(t);
+function submitPick(v) {
+  const G = S.G; const ti = myTeam(); const topic = cleanTopic(v);
   if (!G || ti < 0 || !topic) { bump($('#pick-in')); return; }
   const tm = G.teams[ti]; if (tm.ph !== 'pick') return;
   pub({ pick: { g: G.id, r: tm.r, t: topic } }); $('#pick-in').value = '';
@@ -903,21 +1021,33 @@ function submitPick(t) {
 function bump(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); el.focus(); }
 function makeCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.random() * A.length | 0]; return s; }
 
+function setLang(l) {
+  if (!LANGS.includes(l) || l === S.lang) return;
+  S.lang = l; store.set('lang', l);
+  if (S.lobby) S.lobby.presence({ lang: l }).catch(() => {});
+  if (S.room) pub({ lang: l });
+  // a host still in the lobby changes the room language too
+  if (S.amHost && S.hostG && S.hostG.st === 'lobby' && !S.hostG.auto) { S.hostG.lang = l; publishG(); }
+  // a player in the queue moves to the queue of the new language
+  if (S.seeking && !S.room) { S.seeking = { k: seekKey(), since: Date.now() }; S.lobby.presence({ seek: S.seeking }).catch(() => {}); }
+  applyStatic(); buildHomeStatic(); S.keys = {}; render();
+}
+
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
   const act = b.dataset.act, v = b.dataset.v;
   switch (act) {
     case 'home': if (!S.room && !S.seeking) { S.screen = 'home'; render(); } break;
+    case 'lang': setLang(v); break;
     case 'mode': S.mode = v; store.set('mode', v); render(); break;
     case 'type': S.type = v; store.set('type', v); render(); break;
-    case 'color': S.color = v; store.set('color', v); S.lobby && S.lobby.presence({ col: v }).catch(() => {}); render(); break;
     case 'seek': startSeek(); break;
     case 'cancel-seek': cancelSeek(); break;
     case 'create': joinRoom('r-' + makeCode().toLowerCase(), 'custom'); break;
     case 'leave': leaveRoom(); break;
     case 'copy': {
       const code = S.roomName.slice(2).toUpperCase();
-      try { navigator.clipboard.writeText(code).then(() => toast('Đã sao chép mã ' + code), () => selectCode()); } catch { selectCode(); }
+      try { navigator.clipboard.writeText(code).then(() => toast(t('copied', { c: code })), () => selectCode()); } catch { selectCode(); }
       break;
     }
     case 'g-mode': if (S.amHost && S.hostG && S.hostG.st === 'lobby') { S.hostG.mode = v; publishG(); } break;
@@ -925,28 +1055,33 @@ document.addEventListener('click', e => {
     case 'team': { const cur = pres(myPeer()).team | 0; pub({ team: 1 - cur }); break; }
     case 'start': case 'restart': startGame(); break;
     case 'again': if (S.amHost && S.hostG) { Object.assign(S.hostG, { st: 'lobby', teams: [], win: null, why: null }); publishG(); } break;
-    case 'requeue': { const m = S.G ? S.G.mode : S.mode, t = S.G ? S.G.type : S.type; leaveRoom(true).then(() => { S.mode = m; S.type = t; startSeek(); }); break; }
+    case 'requeue': { const m = S.G ? S.G.mode : S.mode, ty = S.G ? S.G.type : S.type; leaveRoom(true).then(() => { S.mode = m; S.type = ty; startSeek(); }); break; }
     case 'sugg': submitPick(v); break;
   }
 });
-function selectCode() { const el = document.querySelector('.code'); if (!el) return; const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Bôi đen mã rồi sao chép nhé'); }
+function selectCode() { const el = document.querySelector('.code'); if (!el) return; const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(t('selectCopy')); }
 $('#word-form').addEventListener('submit', e => { e.preventDefault(); submitWord(); });
 $('#pick-form').addEventListener('submit', e => { e.preventDefault(); submitPick($('#pick-in').value); });
 $('#join-form').addEventListener('submit', e => {
   e.preventDefault();
   const c = $('#join-code').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (c.length !== 4) { bump($('#join-code')); toast('Mã phòng gồm 4 ký tự'); return; }
+  if (c.length !== 4) { bump($('#join-code')); toast(t('code4')); return; }
   joinRoom('r-' + c.toLowerCase(), 'custom');
 });
 $('#name-in').addEventListener('input', e => {
-  S.name = e.target.value.trim().slice(0, 18) || 'Ẩn danh'; store.set('name', S.name);
+  S.name = e.target.value.trim().slice(0, 18) || t('anon'); store.set('name', S.name);
   S.lobby && S.lobby.presence({ name: S.name }).catch(() => {});
 });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
-// ---------- render ----------
-let rq = false;
-function scheduleRender() { if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
+// ---------- static text ----------
+function applyStatic() {
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-act="lang"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.lang));
+  $('#rules-list').innerHTML = t('rules').map(x => `<li>${x}</li>`).join('');
+}
 const glyphMode = {
   coop2: '<svg class="gl" viewBox="0 0 52 40"><circle cx="19" cy="20" r="13" fill="var(--tang)"/><circle cx="33" cy="20" r="13" fill="var(--sky)"/></svg>',
   vs22: '<svg class="gl" viewBox="0 0 52 40"><circle cx="9" cy="20" r="7.5" fill="var(--tang)"/><circle cx="17" cy="20" r="7.5" fill="var(--tang)" opacity=".7"/><circle cx="35" cy="20" r="7.5" fill="var(--sky)" opacity=".7"/><circle cx="43" cy="20" r="7.5" fill="var(--sky)"/></svg>',
@@ -958,14 +1093,16 @@ const glyphType = {
   turn: '<svg class="gl" viewBox="0 0 52 40"><path d="M16 20a10 10 0 0 1 17-7" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/><path d="M36 20a10 10 0 0 1-17 7" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round"/><path d="M33 7v6h-6" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 33v-6h6" fill="none" stroke="var(--sun)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 function buildHomeStatic() {
-  $('#mode-opts').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="opt" data-act="mode" data-v="${k}" aria-pressed="false">${glyphMode[k]}<span style="min-width:0"><b>${m.name}</b><small>${m.sub}</small>${m.levels ? '<span class="lvtag">⭐ 10 level · ❤️ 20 mạng</span>' : '<span class="lvtag" style="color:var(--sky);background:color-mix(in srgb,var(--sky) 13%,transparent)">Đua tốc độ</span>'}</span><span class="q" data-q="${k}"></span></button>`).join('');
-  $('#type-opts').innerHTML = Object.entries(TYPES).map(([k, t]) => `<button class="opt" data-act="type" data-v="${k}" aria-pressed="false">${glyphType[k]}<span style="min-width:0"><b>${t.name}</b><small>${t.sub}</small></span><span class="q" data-qt="${k}"></span></button>`).join('');
-  $('#swatches').innerHTML = PCOLS.map(c => `<button class="sw" data-act="color" data-v="${c}" style="background:var(--${c})" aria-label="Màu ${c}" aria-pressed="false"></button>`).join('');
+  const md = t('modes'), ty = t('types');
+  $('#mode-opts').innerHTML = Object.keys(MODES).map(k => `<button class="opt" data-act="mode" data-v="${k}" aria-pressed="false">${glyphMode[k]}<span style="min-width:0"><b>${md[k][0]}</b><small>${md[k][1]}</small>${MODES[k].levels ? `<span class="lvtag">${t('lvtag')}</span>` : `<span class="lvtag race">${t('race')}</span>`}</span><span class="q" data-q="${k}"></span></button>`).join('');
+  $('#type-opts').innerHTML = Object.keys(TYPES).map(k => `<button class="opt" data-act="type" data-v="${k}" aria-pressed="false">${glyphType[k]}<span style="min-width:0"><b>${ty[k][0]}</b><small>${ty[k][1]}</small></span><span class="q" data-qt="${k}"></span></button>`).join('');
   $('#ladder').innerHTML = Array.from({ length: MAX_LV }, (_, i) => `<span class="${i === 9 ? 'boss' : ''}">${i === 9 ? '👑' : '⭐'} Lv${i + 1} <i>❤️${maxHp(i + 1)}</i></span>`).join('');
-  $('#name-in').value = S.name;
-  const h = (location.hash || '').replace('#', '').toUpperCase();
-  if (/^[A-Z0-9]{4}$/.test(h)) $('#join-code').value = h;
 }
+
+// ---------- render ----------
+let rq = false;
+function scheduleRender() { if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
+function setHTML(el, keyName, html) { if (S.keys[keyName] !== html) { S.keys[keyName] = html; el.innerHTML = html; } }
 
 function render() {
   for (const id of ['home', 'queue', 'room', 'game']) $('#sc-' + id).hidden = S.screen !== id;
@@ -981,79 +1118,77 @@ function render() {
 function renderTop() {
   const dot = $('#net-dot'), txt = $('#net-txt');
   dot.className = 'dot';
-  if (S.net === 'online') {
-    const n = S.lobby ? S.lobby.peers().filter(p => p.kind !== 'agent').length : 0;
-    dot.classList.add(S.connected === false ? 'warn' : 'on');
-    txt.textContent = S.connected === false ? 'Đang nối lại…' : `${n} người đang online`;
-  } else if (S.net === 'offline') { dot.classList.add('off'); txt.textContent = 'Ngoại tuyến'; }
-  else txt.textContent = 'Đang kết nối…';
-  let b = '';
-  if (S.net === 'online' && S.connected === false) b = '<div class="banner"><b>Đang kết nối máy chủ…</b> Nếu trang lâu không có ai chơi, máy chủ miễn phí cần khoảng 30 đến 60 giây để thức dậy.</div>';
+  if (S.net === 'online' && S.connected) {
+    const n = S.lobby ? S.lobby.peers().length : 0;
+    dot.classList.add('on'); txt.textContent = t('online', { n });
+  } else if (S.net === 'online' && S.connected === false) { dot.classList.add('warn'); txt.textContent = t('reconnecting'); }
+  else if (S.net === 'offline') { dot.classList.add('off'); txt.textContent = t('offline'); }
+  else txt.textContent = t('connecting');
+  const b = S.net === 'online' && !S.connected ? `<div class="banner">${t('bannerWake')}</div>` : '';
   if ($('#banner').innerHTML !== b) $('#banner').innerHTML = b;
 }
 
 function renderHome() {
   document.querySelectorAll('[data-act="mode"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
   document.querySelectorAll('[data-act="type"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.type));
-  document.querySelectorAll('[data-act="color"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.color));
-  const ok = S.net === 'online';
+  const ok = S.net === 'online' && S.connected;
   ['#seek-btn', '#create-btn', '#join-btn'].forEach(s => $(s).disabled = !ok);
+  // live queue counts, only for my language
   const counts = {}; if (S.lobby) for (const p of S.lobby.peers()) { const s = p.presence && p.presence.seek; if (s && s.k && !s.room) counts[s.k] = (counts[s.k] || 0) + 1; }
-  document.querySelectorAll('[data-q]').forEach(el => { const k = el.dataset.q; const n = Object.keys(counts).filter(x => x.startsWith(k + '-')).reduce((a, x) => a + counts[x], 0); el.textContent = n ? `${n} đang tìm` : ''; });
-  document.querySelectorAll('[data-qt]').forEach(el => { const n = counts[S.mode + '-' + el.dataset.qt] || 0; el.textContent = n ? `${n} đang tìm` : ''; });
+  document.querySelectorAll('[data-q]').forEach(el => { const pre = S.lang + '-' + el.dataset.q + '-'; const n = Object.keys(counts).filter(x => x.startsWith(pre)).reduce((a, x) => a + counts[x], 0); el.textContent = n ? t('searching', { n }) : ''; });
+  document.querySelectorAll('[data-qt]').forEach(el => { const n = counts[S.lang + '-' + S.mode + '-' + el.dataset.qt] || 0; el.textContent = n ? t('searching', { n }) : ''; });
 }
 
 function renderQueue() {
-  const k = S.seeking ? S.seeking.k : S.mode + '-' + S.type; const [m, t] = k.split('-');
-  $('#q-info').textContent = `${MODES[m].name} · ${TYPES[t].name}`;
+  const k = S.seeking ? S.seeking.k : seekKey(); const [l, m, ty] = k.split('-');
+  $('#q-info').textContent = `${t('modes')[m][0]} · ${t('types')[ty][0]} · ${t('langName')[l]}`;
   const n = seekersFor(k).filter(p => !p.presence.seek.room).length;
   $('#q-count').textContent = `${Math.max(1, Math.min(n, MODES[m].n))}/${MODES[m].n}`;
 }
 
 function renderRoom() {
   const el = $('#sc-room'); const G = S.G;
-  if (!G) { setHTML(el, 'room-wait', `<div class="card center" style="padding:40px">Đang vào phòng…</div>`); return; }
+  if (!G) { setHTML(el, 'room-wait', `<div class="card center" style="padding:40px">${t('loadingRoom')}</div>`); return; }
   const m = MODES[G.mode], ps = S.ps, me = myPeer(), host = S.amHost;
   const code = S.roomName.slice(2).toUpperCase();
-  const tagOf = p => `${p.peer === S.hostPeer ? '<span class="tag host">Chủ phòng</span>' : ''}${p.peer === me ? '<span class="tag you">Bạn</span>' : ''}`;
-  const slot = p => p ? `<div class="slot">${avatar(p.peer)}<span class="nm">${esc(pName(p.peer))}</span>${tagOf(p)}</div>` : `<div class="slot empty">Đang chờ người chơi…</div>`;
+  const tagOf = p => `${p.peer === S.hostPeer ? `<span class="tag host">${t('hostTag')}</span>` : ''}${p.peer === me ? `<span class="tag you">${t('youTag')}</span>` : ''}`;
+  const slot = p => p ? `<div class="slot">${avatar(p.peer)}<span class="nm">${esc(pName(p.peer))}</span>${tagOf(p)}</div>` : `<div class="slot empty">${t('waitingP')}</div>`;
   let players = '';
   if (m.teams === 1 || G.auto) {
     const list = ps.slice(0, m.n), extra = ps.slice(m.n);
     players = `<div class="slots row" style="grid-template-columns:repeat(${m.n},minmax(0,1fr))">${Array.from({ length: m.n }, (_, i) => slot(list[i])).join('')}</div>` +
-      (extra.length ? `<p class="muted" style="margin:10px 0 0">Khán giả: ${extra.map(p => esc(pName(p.peer))).join(', ')}</p>` : '');
+      (extra.length ? `<p class="muted" style="margin:10px 0 0">${t('spectators')}: ${extra.map(p => esc(pName(p.peer))).join(', ')}</p>` : '');
   } else {
-    const t = [0, 1].map(i => ps.filter(p => (p.presence.team | 0) === i));
-    players = `<div class="teams">${[0, 1].map(i => `<div class="team"><h4><span class="dot" style="background:var(--${TEAM_COLS[i]})"></span>${TEAM_NAMES[i]}</h4><div class="slots">${[0, 1].map(j => slot(t[i][j])).join('')}${t[i].slice(2).map(p => `<div class="slot">${avatar(p.peer)}<span class="nm">${esc(pName(p.peer))}</span><span class="tag">Dư</span></div>`).join('')}</div></div>`).join('')}</div>
-      <div style="margin-top:12px"><button class="btn sm" data-act="team">Đổi đội</button></div>`;
+    const tl = [0, 1].map(i => ps.filter(p => (p.presence.team | 0) === i));
+    players = `<div class="teams">${[0, 1].map(i => `<div class="team"><h4><span class="dot" style="background:var(--${TEAM_COLS[i]})"></span>${teamName(i)}</h4><div class="slots">${[0, 1].map(j => slot(tl[i][j])).join('')}${tl[i].slice(2).map(p => `<div class="slot">${avatar(p.peer)}<span class="nm">${esc(pName(p.peer))}</span><span class="tag">${t('extra')}</span></div>`).join('')}</div></div>`).join('')}</div>
+      <div style="margin-top:12px;text-align:center"><button class="btn sm" data-act="team">${t('switchTeam')}</button></div>`;
   }
   const ready = m.teams === 1 || G.auto ? ps.length >= m.n : [0, 1].every(i => ps.filter(p => (p.presence.team | 0) === i).length >= 2);
   const head = S.roomKind === 'custom'
-    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(c)}</span>`).join('')}</div><div><div style="font-weight:700">Mã phòng</div><div class="muted" style="font-size:13.5px">Gửi mã này cho bạn bè để vào cùng phòng</div><button class="btn sm" data-act="copy" style="margin-top:8px">Sao chép mã</button></div></div>`
-    : `<div><div style="font-family:var(--f-display);font-size:26px;font-weight:800">${ps.length >= m.n ? 'Đã ghép đủ người!' : 'Đang gom người chơi…'}</div><div class="muted">${G.id === 0 ? 'Trận sẽ tự bắt đầu khi đủ người.' : 'Chủ phòng bấm bắt đầu để chơi tiếp.'}</div></div>`;
-  const seg = (act, obj, cur) => `<div class="seg">${Object.entries(obj).map(([k, o]) => `<button class="chip" data-act="${act}" data-v="${k}" aria-pressed="${k === cur}" ${host && !G.auto ? '' : 'disabled'}>${o.name}</button>`).join('')}</div>`;
+    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(c)}</span>`).join('')}</div><div><div style="font-weight:700">${t('codeLbl')}</div><div class="muted" style="font-size:13.5px">${t('codeHint')}</div><button class="btn sm" data-act="copy" style="margin-top:8px">${t('copy')}</button></div></div>`
+    : `<div><div style="font-family:var(--f-display);font-size:26px;font-weight:800">${ps.length >= m.n ? t('matched') : t('gathering')}</div><div class="muted">${G.id === 0 ? t('autoStart') : t('hostNext')}</div></div>`;
+  const md = t('modes'), ty = t('types');
+  const seg = (act, keys, names, cur) => `<div class="seg">${keys.map(k => `<button class="chip" data-act="${act}" data-v="${k}" aria-pressed="${k === cur}" ${host && !G.auto ? '' : 'disabled'}>${names[k][0]}</button>`).join('')}</div>`;
   const html = `<div class="card">
-      <div class="room-top">${head}<button class="btn ghost sm" data-act="leave">Rời phòng</button></div>
-      <h2 class="lbl">Chế độ ${host && !G.auto ? '' : '<span style="text-transform:none;letter-spacing:0">(chủ phòng chọn)</span>'}</h2>${seg('g-mode', MODES, G.mode)}
-      ${m.levels ? '<p class="muted" style="margin:8px 0 0;font-size:13.5px">⭐ Leo 10 level, bắt đầu với ❤️ 20 mạng. Mỗi level ít hơn 2 mạng, Level 10 chỉ còn 2.</p>' : ''}
-      <h2 class="lbl">Chủ đề</h2>${seg('g-type', TYPES, G.type)}
-      <h2 class="lbl">Người chơi · ${Math.min(ps.length, m.n)}/${m.n}</h2>${players}
+      <div class="room-top">${head}<button class="btn ghost sm" data-act="leave">${t('leave')}</button></div>
+      <p class="langnote">${t('roomLang', { l: t('langName')[roomLang()] })}</p>
+      <h2 class="lbl">${t('modeLbl')} ${host && !G.auto ? '' : `<span style="text-transform:none;letter-spacing:0">${t('hostPicks')}</span>`}</h2>${seg('g-mode', Object.keys(MODES), md, G.mode)}
+      ${m.levels ? `<p class="muted" style="margin:8px 0 0;font-size:13.5px">${t('levelsNote')}</p>` : ''}
+      <h2 class="lbl">${t('topicLbl')}</h2>${seg('g-type', Object.keys(TYPES), ty, G.type)}
+      <h2 class="lbl">${t('players')} · ${Math.min(ps.length, m.n)}/${m.n}</h2>${players}
       <div class="foot">
-        <span class="muted">${host ? (ready ? 'Đủ người rồi, bắt đầu thôi.' : `Cần ${m.n} người${m.teams > 1 ? ', mỗi đội 2' : ''}.`) : `Chờ <b style="color:var(--ink)">${esc(pName(S.hostPeer))}</b> bắt đầu…`}</span>
-        ${host && !(G.auto && G.id === 0) ? `<button class="btn primary big" data-act="start" ${ready ? '' : 'disabled'}>Bắt đầu</button>` : ''}
+        <span class="muted">${host ? (ready ? t('readyGo') : t('needN', { n: m.n }) + (m.teams > 1 ? t('perTeam') : '') + '.') : t('waitHost', { h: esc(pName(S.hostPeer)) })}</span>
+        ${host && !(G.auto && G.id === 0) ? `<button class="btn primary big" data-act="start" ${ready ? '' : 'disabled'}>${t('start')}</button>` : ''}
       </div>
     </div>`;
   setHTML(el, 'room', html);
 }
-
-function setHTML(el, keyName, html) { if (S.keys[keyName] !== html) { S.keys[keyName] = html; el.innerHTML = html; } }
 
 function renderHud() {
   const G = S.G, hud = $('#g-hud');
   if (!isCoop(G) || !G.lvl) { hud.hidden = true; return; }
   hud.hidden = false;
   const lv = G.lvl, hp = G.hp, mx = maxHp(lv);
-  // detect changes for animation
   const prev = S.hpSeen; let lost = [], gained = false, pop = false;
   if (prev && prev.gid === G.id) {
     if (prev.lvl === lv && hp < prev.hp) for (let i = hp; i < prev.hp; i++) lost.push(i);
@@ -1065,11 +1200,11 @@ function renderHud() {
     const n = i + 1; const cls = n < lv ? 'done' : n === lv ? 'cur' : '';
     return `${i ? `<i class="${n <= lv ? 'on' : ''}"></i>` : ''}<span class="${cls} ${n === MAX_LV ? 'crown' : ''}">${n === MAX_LV ? '👑' : n}</span>`;
   }).join('');
-  const html = `<div class="path" aria-label="Tiến độ level">${path}</div>
+  const html = `<div class="path" aria-label="Level">${path}</div>
     <div class="hud-mid">
       <div class="lv"><div class="lv-badge ${lv === MAX_LV ? 'boss' : ''} ${pop ? 'pop' : ''}"><small>LEVEL</small><b>${lv}</b></div>
-        <div class="lv-txt"><b>${lv === MAX_LV ? '👑 Trùm cuối' : `⭐ Level ${lv}`}</b><span>${lv === MAX_LV ? 'Chỉ còn đúng 2 mạng!' : `Gõ trùng để lên Level ${lv + 1}`}</span></div></div>
-      <div class="hearts-row"><div class="hearts" aria-label="${hp} mạng">${hearts}</div><span class="hp-n">${hp}<small>/${mx}</small></span></div>
+        <div class="lv-txt"><b>${lv === MAX_LV ? t('boss') : `⭐ Level ${lv}`}</b><span>${lv === MAX_LV ? t('bossSub') : t('nextLv', { n: lv + 1 })}</span></div></div>
+      <div class="hearts-row"><div class="hearts" aria-label="${t('lives', { h: hp })}">${hearts}</div><span class="hp-n">${hp}<small>/${mx}</small></span></div>
     </div>`;
   if (lost.length || pop || S.keys.hud !== html.replace(/ (lost|gain|pop)/g, '')) {
     S.keys.hud = html.replace(/ (lost|gain|pop)/g, '');
@@ -1077,21 +1212,26 @@ function renderHud() {
   }
 }
 
-const ringHTML = ti => `<div class="ring" data-t="${ti}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52" fill="none" stroke-width="9"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke="url(#rg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="0"/></svg><div class="num"><span class="tn">30</span><small class="tp">giây</small></div></div>`;
+const ringHTML = ti => `<div class="ring" data-t="${ti}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="52" fill="none" stroke-width="9"/><circle class="bar" cx="60" cy="60" r="52" fill="none" stroke="url(#rg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="0"/></svg><div class="num"><span class="tn">30</span><small class="tp">${t('secs')}</small></div></div>`;
 
-function verdictHTML(G, tm, coop) {
-  if (tm.res === 'seed') return '<div class="dice">🎲</div><div class="verdict mid">Từ khởi đầu</div><div class="vsub">Vòng sau: tìm một từ nối các từ này</div>';
+// does the game carry on after this reveal? (then show the countdown to the next round)
+function continues(G, tm) { if (tm.res === 'seed') return true; return isCoop(G) ? G.win == null : tm.res !== 'match'; }
+
+function verdictHTML(G, tm, ti) {
+  const coop = isCoop(G);
+  const nx = continues(G, tm) ? `<div class="nextin" data-t="${ti}"></div>` : '';
+  if (tm.res === 'seed') return `<div class="dice">🎲</div><div class="verdict mid">${t('seedV')}</div><div class="vsub">${t('seedSub')}</div>${nx}`;
   let v, sub = '';
-  if (tm.res === 'match') v = `<div class="verdict good">${tm.fx === 'clear' ? 'PHÁ ĐẢO!' : 'TRÙNG KHỚP!'}</div>`;
-  else if (tm.res === 'miss') v = '<div class="verdict mid">Lệch từ rồi!</div>';
-  else v = '<div class="verdict bad">Hết giờ!</div>';
+  if (tm.res === 'match') v = `<div class="verdict good">${tm.fx === 'clear' ? t('clear') : t('match')}</div>`;
+  else if (tm.res === 'miss') v = `<div class="verdict mid">${t('miss')}</div>`;
+  else v = `<div class="verdict bad">${t('timeout')}</div>`;
   if (coop) {
-    if (tm.fx === 'up') sub = `<div class="vsub up">⭐ LEVEL UP → Lv ${G.lvl} · ❤️ ${maxHp(G.lvl)}</div>`;
-    else if (tm.fx === 'clear') sub = '<div class="vsub up">🏆 Vượt qua Level 10!</div>';
-    else if (tm.fx === 'hurt') sub = `<div class="vsub hurt">💔 -1 mạng · còn ${G.hp}</div>`;
-    else if (tm.fx === 'dead') sub = '<div class="vsub hurt">💀 Hết mạng!</div>';
-  } else if (tm.res === 'miss') sub = '<div class="vsub">Vòng sau bắt sóng lại!</div>';
-  return v + sub;
+    if (tm.fx === 'up') sub = `<div class="vsub up">${t('upSub', { l: G.lvl, h: maxHp(G.lvl) })}</div>`;
+    else if (tm.fx === 'clear') sub = `<div class="vsub up">${t('clearSub')}</div>`;
+    else if (tm.fx === 'hurt') sub = `<div class="vsub hurt">${t('hurtSub', { h: G.hp })}</div>`;
+    else if (tm.fx === 'dead') sub = `<div class="vsub hurt">${t('deadSub')}</div>`;
+  } else if (tm.res === 'miss') sub = `<div class="vsub">${t('missSub')}</div>`;
+  return v + sub + nx;
 }
 
 function arenaHTML(G, ti) {
@@ -1099,19 +1239,19 @@ function arenaHTML(G, ti) {
   const mem = (G.members && G.members[ti]) || [];
   const tm = G.teams && G.teams[ti];
   const hideTyped = vs && mt >= 0 && mt !== ti && G.st !== 'over';
-  let round = 'Chuẩn bị', topic, topicNone = false, mid, seatsCls = '', slotOf;
+  let round = t('prep'), topic, topicNone = false, mid, seatsCls = '', slotOf;
   if (!tm || G.st === 'count') {
-    topic = G.type === 'rand' && G.topic ? `Chủ đề: <span class="k">${esc(G.topic)}</span>` : (G.type === 'turn' ? 'Mỗi vòng một người ra đề' : (coop ? '⭐ Level 1 · ❤️ 20 mạng' : 'Không chủ đề'));
+    topic = G.type === 'rand' && G.topic ? `${t('topicIs')}<span class="k">${esc(G.topic)}</span>` : (G.type === 'turn' ? t('turnPrep') : (coop ? t('coopPrep') : t('noTopicPrep')));
     mid = ringHTML(ti);
-    slotOf = () => '<div class="cap">Sẵn sàng</div>';
+    slotOf = () => `<div class="cap">${t('ready')}</div>`;
   } else {
     const picker = mem[(tm.r - 1) % mem.length];
     const isSeed = tm.res === 'seed';
-    round = (coop ? `Level ${(G.rl && G.rl[tm.r - 1]) || G.lvl} · ` : '') + `Vòng ${tm.r}` + (isSeed ? ' · 🎲 Từ khởi đầu' : '');
-    topic = tm.t ? `Chủ đề: <span class="k">${esc(tm.t)}</span>` : (tm.ph === 'pick' ? `<span class="k">${esc(pName(picker))}</span> đang ra đề…` : (isSeed ? 'Mở màn bằng từ ngẫu nhiên' : 'Không chủ đề. Gõ gì cũng được.'));
+    round = (coop ? `Level ${(G.rl && G.rl[tm.r - 1]) || G.lvl} · ` : '') + t('round', { n: tm.r }) + (isSeed ? t('seedTag') : '');
+    topic = tm.t ? `${t('topicIs')}<span class="k">${esc(tm.t)}</span>` : (tm.ph === 'pick' ? t('picking', { p: `<span class="k">${esc(pName(picker))}</span>` }) : (isSeed ? t('seedOpen') : t('anything')));
     topicNone = !tm.t && tm.ph !== 'pick';
     if (tm.ph === 'reveal' || tm.ph === 'done') {
-      mid = verdictHTML(G, tm, coop);
+      mid = verdictHTML(G, tm, ti);
       seatsCls = isSeed ? 'seed' : tm.res === 'match' ? 'match' : tm.res === 'miss' ? 'miss' : '';
       const ws = roundWords(ti, tm.r);
       slotOf = (p, i) => {
@@ -1123,19 +1263,19 @@ function arenaHTML(G, ti) {
     } else {
       mid = ringHTML(ti);
       slotOf = p => {
-        if (tm.ph === 'pick') return p === picker ? '<div class="cap">✍️ Đang ra đề</div>' : '<div class="cap">Chờ đề</div>';
+        if (tm.ph === 'pick') return p === picker ? `<div class="cap">${t('choosing')}</div>` : `<div class="cap">${t('waitTopic')}</div>`;
         const l = pres(p).lock; const locked = p === me ? (S.my.lock && S.my.lock.r === tm.r) : (l && l.g === G.id && l.r === tm.r);
-        return locked ? '<div class="cap ok">✓ Đã chốt</div>' : '<div class="cap">Đang gõ<span class="typing"><i></i><i></i><i></i></span></div>';
+        return locked ? `<div class="cap ok">${t('locked')}</div>` : `<div class="cap">${t('typing')}<span class="typing"><i></i><i></i><i></i></span></div>`;
       };
     }
   }
   const seats = mem.map((p, i) => {
     const l = pres(p).lock, ok = tm && tm.ph === 'word' && (p === me ? (S.my.lock && S.my.lock.r === tm.r) : (l && l.g === G.id && l.r === tm.r));
-    return `<div class="seat s${i} ${ok ? 'ok' : ''}" style="--c:var(--${pCol(p)})">${avatar(p)}<div class="nm">${esc(pName(p))}${p === me ? ' (bạn)' : ''}</div><div class="wslot">${slotOf(p, i)}</div></div>`;
+    return `<div class="seat s${i} ${ok ? 'ok' : ''}" style="--c:var(--${pCol(p)})">${avatar(p)}<div class="nm">${esc(pName(p))}${p === me ? t('youSuffix') : ''}</div><div class="wslot">${slotOf(p, i)}</div></div>`;
   }).join('');
   const myCol = Math.max(0, mt);
   return `<div class="arena t${ti} ${vs ? 'compact' : ''} ${vs && ti === mt ? 'mine' : ''}" data-t="${ti}" style="order:${ti === myCol ? 0 : 2}">
-    ${vs ? `<div class="team-tag"><span class="dot" style="background:var(--${TEAM_COLS[ti]})"></span>${TEAM_NAMES[ti]}${ti === mt ? '<small>Đội bạn</small>' : ''}</div>` : ''}
+    ${vs ? `<div class="team-tag"><span class="dot" style="background:var(--${TEAM_COLS[ti]})"></span>${teamName(ti)}${ti === mt ? `<small>${t('yourTeam')}</small>` : ''}</div>` : ''}
     <div class="round-no">${round}</div>
     <div class="topic ${topicNone ? 'none' : ''}">${topic}</div>
     <div class="seats n${mem.length} ${seatsCls}">${seats}<div class="mid">${mid}</div></div>
@@ -1145,50 +1285,54 @@ function arenaHTML(G, ti) {
 function renderGame() {
   const G = S.G; if (!G) return;
   const ti = dispTeam(), mt = myTeam(), me = myPeer();
-  const m = MODES[G.mode]; const coop = isCoop(G); const vs = m.teams > 1;
+  const m = MODES[G.mode]; const vs = m.teams > 1;
   setHTML($('#g-meta'), 'meta', [
-    S.roomKind === 'custom' ? `<span class="pill">Phòng <b style="color:var(--ink);font-family:var(--f-mono)">${esc(S.roomName.slice(2).toUpperCase())}</b></span>` : '<span class="pill">Ghép ngẫu nhiên</span>',
-    `<span class="pill">${m.name}</span>`, `<span class="pill">${TYPES[G.type].name}</span>`,
-    mt < 0 ? '<span class="pill">Đang xem</span>' : '',
+    S.roomKind === 'custom' ? `<span class="pill">${t('metaRoom')} <b style="color:var(--ink);font-family:var(--f-mono)">${esc(S.roomName.slice(2).toUpperCase())}</b></span>` : `<span class="pill">${t('metaQuick')}</span>`,
+    `<span class="pill">${t('modes')[G.mode][0]}</span>`, `<span class="pill">${t('types')[G.type][0]}</span>`,
+    `<span class="pill">${roomLang().toUpperCase()}</span>`,
+    mt < 0 ? `<span class="pill">${t('watching')}</span>` : '',
   ].join(''));
   renderHud();
   $('#g-board').classList.toggle('vs', vs);
-  setHTML($('#g-arenas'), 'arenas', (vs ? [0, 1] : [0]).map(t => arenaHTML(G, t)).join(''));
+  setHTML($('#g-arenas'), 'arenas', (vs ? [0, 1] : [0]).map(x => arenaHTML(G, x)).join(''));
   const ctl = $('#g-controls'); ctl.style.gridColumn = vs ? String(ti + 1) : ''; ctl.style.order = '1';
 
   const wf = $('#word-form'), pf = $('#pick-form'), sg = $('#pick-sugg'), note = $('#g-note');
   let showWord = false, showPick = false, noteHtml = '';
   const mem = (G.members && G.members[ti]) || [];
   if (G.st === 'count' || !G.teams || !G.teams[ti]) {
-    noteHtml = 'Đặt tay lên bàn phím. Vòng đầu sẽ mở bằng từ ngẫu nhiên.';
+    noteHtml = t('prepNote');
   } else {
     const tm = G.teams[ti];
     const picker = mem[(tm.r - 1) % mem.length];
     if (tm.ph === 'reveal' || tm.ph === 'done') {
-      if (tm.res === 'seed') noteHtml = 'Ghi nhớ các từ này. Vòng sau hãy gõ một từ liên quan tới tất cả.';
+      if (tm.res === 'seed') noteHtml = t('seedNote');
+      else if (tm.ph === 'reveal' && continues(G, tm) && tm.res !== 'match') noteHtml = t('missNote');
       const ck = G.id + '|' + ti + '|' + tm.r;
       if (tm.res === 'match' && !S.celebrated.has(ck)) { S.celebrated.add(ck); tm.fx === 'clear' ? fireworks() : confetti(); }
     } else if (tm.ph === 'word') {
       const locked = S.my.lock && S.my.lock.r === tm.r;
       const prev = tm.seeds && tm.seeds[tm.r - 1];
-      if (mt < 0) noteHtml = 'Bạn đang xem trận này.';
-      else if (locked) noteHtml = `Đã chốt <b>${esc(S.pending ? S.pending.w : '')}</b>. Đang chờ đồng đội…`;
+      if (mt < 0) noteHtml = t('watchNote');
+      else if (locked) noteHtml = t('lockedNote', { w: esc(S.pending ? S.pending.w : '') });
       else {
         showWord = true;
-        noteHtml = prev ? `Nối <b>${prev.map(esc).join('</b> với <b>')}</b> bằng một từ chung.` : 'Nhìn các từ vòng trước, đoán xem đồng đội sẽ gõ gì.';
+        noteHtml = prev ? t('linkNote', { a: prev.map(esc).join(t('linkJoin')) }) : t('againNote');
       }
     } else if (tm.ph === 'pick') {
       const iAmPicker = picker === me;
       if (iAmPicker && S.keys.picked !== G.id + '|' + tm.r) {
-        showPick = true; noteHtml = 'Bạn ra đề vòng này. Gõ chủ đề hoặc chọn nhanh bên dưới.';
+        showPick = true; noteHtml = t('pickNote');
+        const list = TOPICS[roomLang()] || TOPICS.vi;
         const sugg = []; let s = parseInt(hash(G.id + '|' + ti + '|' + tm.r).slice(0, 6), 36);
-        while (sugg.length < 4) { const t = TOPICS[s % TOPICS.length]; if (!sugg.includes(t)) sugg.push(t); s = Math.floor(s / 7) + 13 * sugg.length + 1; }
-        setHTML(sg, 'sugg', sugg.map(t => `<button type="button" class="chip" data-act="sugg" data-v="${esc(t)}">${esc(t)}</button>`).join(''));
-      } else noteHtml = iAmPicker ? 'Đã gửi đề…' : `Chờ <b>${esc(pName(picker))}</b> ra đề. Hết 20 giây sẽ lấy đề ngẫu nhiên.`;
+        while (sugg.length < 4) { const x = list[s % list.length]; if (!sugg.includes(x)) sugg.push(x); s = Math.floor(s / 7) + 13 * sugg.length + 1; }
+        setHTML(sg, 'sugg', sugg.map(x => `<button type="button" class="chip" data-act="sugg" data-v="${esc(x)}">${esc(x)}</button>`).join(''));
+      } else noteHtml = iAmPicker ? t('sentTopic') : t('waitPick', { p: esc(pName(picker)) });
     }
   }
   const wasHidden = wf.hidden;
   wf.hidden = !showWord; pf.hidden = !showPick; sg.hidden = !showPick;
+  // the next round opens the input again and puts the cursor in it
   if (showWord && wasHidden && S.screen === 'game') setTimeout(() => $('#word-in').focus(), 30);
   if (note.innerHTML !== noteHtml) note.innerHTML = noteHtml;
   note.hidden = !noteHtml;
@@ -1198,9 +1342,9 @@ function renderGame() {
 
 function histTable(ti, hide) {
   const G = S.G, coop = isCoop(G); const mem = (G.members && G.members[ti]) || []; const tm = G.teams && G.teams[ti];
-  if (!tm) return '<p class="empty-hist">Chưa có vòng nào.</p>';
+  if (!tm) return `<p class="empty-hist">${t('histNone')}</p>`;
   const doneRounds = (tm.ph === 'reveal' || tm.ph === 'done') ? tm.r : tm.r - 1;
-  if (doneRounds < 1) return '<p class="empty-hist">Từ của mỗi vòng sẽ hiện ở đây sau khi lật.</p>';
+  if (doneRounds < 1) return `<p class="empty-hist">${t('histAfter')}</p>`;
   const two = mem.length === 2;
   let rows = '';
   for (let r = doneRounds; r >= 1; r--) {
@@ -1211,7 +1355,7 @@ function histTable(ti, hide) {
     const c = `<td class="c">${r}${lv ? ' · ' + (lv === MAX_LV ? '👑' : 'Lv' + lv) : ''} ${seed ? '🎲' : match ? '⭐' : (coop ? '💔' : '')}</td>`;
     rows += `<tr class="${match ? 'match' : ''} ${seed ? 'seedrow' : ''}">` + (two ? `<td class="l">${cell(ws[0])}</td>${c}<td>${cell(ws[1])}</td>` : c + ws.map(w => `<td>${cell(w)}</td>`).join('')) + '</tr>';
   }
-  const head = two ? `<th class="l">${esc(pName(mem[0]))}</th><th class="c">Vòng</th><th>${esc(pName(mem[1]))}</th>` : `<th class="c">Vòng</th>${mem.map(p => `<th>${esc(pName(p))}</th>`).join('')}`;
+  const head = two ? `<th class="l">${esc(pName(mem[0]))}</th><th class="c">${t('roundCol')}</th><th>${esc(pName(mem[1]))}</th>` : `<th class="c">${t('roundCol')}</th>${mem.map(p => `<th>${esc(pName(p))}</th>`).join('')}`;
   return `<div class="tbl-wrap"><table class="sym"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -1219,7 +1363,7 @@ function renderHist() {
   const G = S.G, el = $('#g-hist');
   if (MODES[G.mode].teams === 1) { setHTML(el, 'hist', histTable(0, false)); return; }
   const mt = myTeam();
-  setHTML(el, 'hist', `<div class="hist-grid">${[0, 1].map(t => `<div><h4><span class="dot" style="background:var(--${TEAM_COLS[t]})"></span>${TEAM_NAMES[t]}</h4>${histTable(t, mt >= 0 && mt !== t && G.st !== 'over')}</div>`).join('')}</div>`);
+  setHTML(el, 'hist', `<div class="hist-grid">${[0, 1].map(x => `<div><h4><span class="dot" style="background:var(--${TEAM_COLS[x]})"></span>${teamName(x)}</h4>${histTable(x, mt >= 0 && mt !== x && G.st !== 'over')}</div>`).join('')}</div>`);
 }
 
 function renderOver() {
@@ -1229,52 +1373,52 @@ function renderOver() {
   const mt = myTeam(), m = MODES[G.mode]; const coop = isCoop(G);
   const tm = G.teams && G.teams[Math.max(0, G.win)];
   let html, celebrate = null;
-  const waitTxt = `<span class="muted">Chờ ${esc(pName(S.hostPeer))} bắt đầu lại…</span>`;
-  const leaveBtn = (S.roomKind === 'queue' ? '<button class="btn" data-act="requeue">Tìm trận khác</button>' : '') + '<button class="btn ghost" data-act="leave">Rời phòng</button>';
+  const waitTxt = `<span class="muted">${t('waitRestart', { h: esc(pName(S.hostPeer)) })}</span>`;
+  const leaveBtn = (S.roomKind === 'queue' ? `<button class="btn" data-act="requeue">${t('requeue')}</button>` : '') + `<button class="btn ghost" data-act="leave">${t('leave')}</button>`;
   if (G.win === -2) {
-    html = `<div class="big-emoji">🚪</div><div class="verdict mid">Có người rời phòng</div><p class="muted" style="margin:0">Trận đấu dừng lại.</p>
-      <div class="acts">${S.amHost ? '<button class="btn primary" data-act="again">Về phòng chờ</button>' : ''}${leaveBtn}</div>`;
+    html = `<div class="big-emoji">🚪</div><div class="verdict mid">${t('leftT')}</div><p class="muted" style="margin:0">${t('leftSub')}</p>
+      <div class="acts">${S.amHost ? `<button class="btn primary" data-act="again">${t('backLobby')}</button>` : ''}${leaveBtn}</div>`;
   } else if (coop) {
     const rounds = tm ? tm.r : 0;
     if (G.why === 'clear') {
-      html = `<div class="big-emoji">🏆</div><div class="verdict good">PHÁ ĐẢO TOÀN DIỆN!</div>
-        <p class="muted" style="margin:0">Cả ${m.n} người vượt qua 10 level, chốt hạ bằng từ <b style="color:var(--ink)">${esc(wordsOf(G.members[0][0])[rounds - 1] || '')}</b>.</p>
-        <div class="title-badge"><small>Danh hiệu mở khoá</small><b>${TITLE}</b></div>
-        <div class="stats"><div><b>${rounds}</b>vòng</div><div><b>${G.hp}</b>mạng còn lại</div></div>
-        <div class="acts">${S.amHost ? '<button class="btn gold" data-act="restart">Chơi lại từ Level 1</button>' : waitTxt}${leaveBtn}</div>`;
+      html = `<div class="big-emoji">🏆</div><div class="verdict good">${t('clearT')}</div>
+        <p class="muted" style="margin:0">${t('clearBody', { n: m.n, w: esc(wordsOf(G.members[0][0])[rounds - 1] || '') })}</p>
+        <div class="title-badge"><small>${t('titleUnlocked')}</small><b>${t('TITLE')}</b></div>
+        <div class="stats"><div><b>${rounds}</b>${t('statRounds')}</div><div><b>${G.hp}</b>${t('statLives')}</div></div>
+        <div class="acts">${S.amHost ? `<button class="btn gold" data-act="restart">${t('restart')}</button>` : waitTxt}${leaveBtn}</div>`;
       celebrate = 'fireworks';
     } else {
       html = `<div class="big-emoji">💀</div><div class="verdict bad">GAME OVER</div>
-        <p class="muted" style="margin:0">Hết mạng ở <b style="color:var(--ink)">${G.lvl === MAX_LV ? '👑 Level 10' : '⭐ Level ' + G.lvl}</b> sau ${rounds} vòng. ${m.n === 2 ? 'Hai bạn' : 'Cả ba bạn'} phải dừng bước tại đây.</p>
-        <div class="stats"><div><b>${G.lvl - 1}</b>level đã qua</div><div><b>${rounds}</b>vòng đã chơi</div></div>
-        <div class="acts">${S.amHost ? '<button class="btn primary" data-act="restart">Chơi lại từ Level 1 (❤️ 20)</button>' : waitTxt}${leaveBtn}</div>`;
+        <p class="muted" style="margin:0">${t('deadBody', { l: G.lvl === MAX_LV ? '👑 Level 10' : '⭐ Level ' + G.lvl, r: rounds, who: m.n === 2 ? t('who2') : t('who3') })}</p>
+        <div class="stats"><div><b>${G.lvl - 1}</b>${t('statLv')}</div><div><b>${rounds}</b>${t('statPlayed')}</div></div>
+        <div class="acts">${S.amHost ? `<button class="btn primary" data-act="restart">${t('restart20')}</button>` : waitTxt}${leaveBtn}</div>`;
     }
   } else {
-    const winTeam = G.win, how = G.why === 'match' ? `gõ trùng sau ${G.teams[winTeam].r} vòng` : 'vì đội kia để hết giờ';
+    const winTeam = G.win, how = G.why === 'match' ? t('howMatch', { r: G.teams[winTeam].r }) : t('howTimeout');
     let title, cls, sub;
-    if (mt < 0) { title = `${TEAM_NAMES[winTeam]} thắng`; cls = 'good'; sub = `${TEAM_NAMES[winTeam]} ${how}.`; }
-    else if (mt === winTeam) { title = 'Đội bạn thắng!'; cls = 'good'; sub = `Đội bạn ${how}.`; }
-    else { title = 'Đội kia nhanh hơn'; cls = 'bad'; sub = G.why === 'match' ? `${TEAM_NAMES[winTeam]} gõ trùng sau ${G.teams[winTeam].r} vòng.` : 'Đội bạn để hết giờ.'; }
+    if (mt < 0) { title = t('teamWins', { t: teamName(winTeam) }); cls = 'good'; sub = `${teamName(winTeam)} ${how}.`; }
+    else if (mt === winTeam) { title = t('youWin'); cls = 'good'; sub = `${t('yourTeam')} ${how}.`; }
+    else { title = t('theyWin'); cls = 'bad'; sub = G.why === 'match' ? `${teamName(winTeam)} ${t('howMatch', { r: G.teams[winTeam].r })}.` : t('yourTimeout'); }
     html = `<div class="big-emoji">${cls === 'good' ? '🎉' : '😵'}</div><div class="verdict ${cls}">${title}</div><p class="muted" style="margin:0">${sub}</p>
-      <div class="acts">${S.amHost ? '<button class="btn primary" data-act="again">Chơi ván mới</button>' : waitTxt}${leaveBtn}</div>`;
+      <div class="acts">${S.amHost ? `<button class="btn primary" data-act="again">${t('newGame')}</button>` : waitTxt}${leaveBtn}</div>`;
     if (cls === 'good') celebrate = 'confetti';
   }
   setHTML($('#over-box'), 'over', html);
   if (celebrate && !S.celebrated.has('over' + G.id)) { S.celebrated.add('over' + G.id); celebrate === 'fireworks' ? fireworks(true) : confetti(); }
 }
 
-// ---------- timer ui loop ----------
+// ---------- timer ui loop (all timers read the shared server clock) ----------
 function uiLoop() {
   requestAnimationFrame(uiLoop);
-  if (S.screen === 'queue') { const s = Math.floor((Date.now() - S.qStart) / 1000); const t = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; if ($('#q-time').textContent !== t) $('#q-time').textContent = t; }
+  if (S.screen === 'queue') { const s = Math.floor((Date.now() - S.qStart) / 1000); const x = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; if ($('#q-time').textContent !== x) $('#q-time').textContent = x; }
   const G = S.G; if (S.screen !== 'game' || !G) return;
   document.querySelectorAll('#g-arenas .ring').forEach(ring => {
     const ti = +ring.dataset.t; let total, el, label;
-    if (G.st === 'count') { total = COUNT_MS / 1000; el = elapsed(G.id + '|count'); label = 'bắt đầu'; }
+    if (G.st === 'count') { total = COUNT_MS / 1000; el = now() - (G.cAt || now()); label = t('startL'); }
     else if (G.teams && G.teams[ti]) {
       const tm = G.teams[ti];
-      if (tm.ph === 'pick') { total = PICK_SEC; label = 'ra đề'; } else if (tm.ph === 'word') { total = WORD_SEC; label = 'giây'; } else return;
-      el = elapsed(phaseKey(G, ti, tm));
+      if (tm.ph === 'pick') { total = PICK_SEC; label = t('pickL'); } else if (tm.ph === 'word') { total = WORD_SEC; label = t('secs'); } else return;
+      el = phaseEl(tm);
     } else return;
     const rem = Math.max(0, total * 1000 - el);
     const num = String(Math.ceil(rem / 1000));
@@ -1283,6 +1427,11 @@ function uiLoop() {
     if (tn.textContent !== num) tn.textContent = num;
     if (tp.textContent !== label) tp.textContent = label;
     ring.classList.toggle('urgent', G.st === 'play' && rem < 5500);
+  });
+  document.querySelectorAll('#g-arenas .nextin').forEach(nx => {
+    const tm = G.teams && G.teams[+nx.dataset.t]; if (!tm || tm.ph !== 'reveal') { nx.textContent = ''; return; }
+    const rem = Math.max(0, (tm.res === 'seed' ? SEED_MS : REVEAL_MS) - phaseEl(tm));
+    const x = t('nextIn', { s: Math.ceil(rem / 1000) }); if (nx.textContent !== x) nx.textContent = x;
   });
 }
 
@@ -1312,7 +1461,6 @@ function fxStart() {
         ctx.globalAlpha = a; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
         next.push(p); continue;
       }
-      // confetti
       p.vy += .3; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
       if (p.y > innerHeight + 30) continue;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
@@ -1340,7 +1488,7 @@ function fireworks(big) {
 // ---------- background: drifting keycaps ----------
 function startBg() {
   const cv = $('#bg'), ctx = cv.getContext('2d');
-  const letters = 'AĂÂBCDĐEÊGHIKLMNOÔƠPQRSTUƯVXY'.split('');
+  const letters = 'AĂÂBCDĐEÊGHIKLMNOÔƠPQRSTUƯVWXYZ1'.split('');
   const cols = ['#ff8f5e', '#5ec4ff', '#c6a0ff', '#ffd166', '#74e3b0'];
   let W = 0, H = 0, tiles = [];
   const resize = () => {
@@ -1351,20 +1499,20 @@ function startBg() {
   };
   const draw = () => {
     ctx.clearRect(0, 0, W, H);
-    for (const t of tiles) {
-      ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.r); ctx.globalAlpha = t.a;
-      const s = t.s, rr = s * .22;
-      ctx.strokeStyle = t.c; ctx.lineWidth = 1.8;
+    for (const p of tiles) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = p.a;
+      const s = p.s, rr = s * .22;
+      ctx.strokeStyle = p.c; ctx.lineWidth = 1.8;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-s / 2, -s / 2, s, s, rr) : ctx.rect(-s / 2, -s / 2, s, s);
-      ctx.globalAlpha = t.a * .35; ctx.fillStyle = t.c; ctx.fill(); ctx.globalAlpha = t.a; ctx.stroke();
-      ctx.fillStyle = t.c; ctx.font = `800 ${s * .46}px 'JetBrains Mono', monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t.l, 0, 1);
+      ctx.globalAlpha = p.a * .35; ctx.fillStyle = p.c; ctx.fill(); ctx.globalAlpha = p.a; ctx.stroke();
+      ctx.fillStyle = p.c; ctx.font = `800 ${s * .46}px 'JetBrains Mono', monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.l, 0, 1);
       ctx.restore();
     }
   };
   const loop = () => {
     requestAnimationFrame(loop);
     if (document.hidden) return;
-    for (const t of tiles) { t.y -= t.v; t.r += t.vr; if (t.y < -40) { t.y = H + 40; t.x = Math.random() * W; } }
+    for (const p of tiles) { p.y -= p.v; p.r += p.vr; if (p.y < -40) { p.y = H + 40; p.x = Math.random() * W; } }
     draw();
   };
   resize(); addEventListener('resize', resize);
@@ -1372,24 +1520,30 @@ function startBg() {
 }
 
 // ---------- hero typing demo ----------
-async function heroDemo() {
-  const f1 = $('#d1'), f2 = $('#d2'), res = $('#d-res'), t1 = f1.querySelector('.txt'), t2 = f2.querySelector('.txt');
-  const script = [
+const DEMO = {
+  vi: [
     { a: 'biển', b: 'núi', seed: true, lv: 1, hp: 20, r: 1 }, { a: 'du lịch', b: 'du lịch', lv: 1, hp: 20, r: 2 },
     { a: 'mèo', b: 'trăng', seed: true, lv: 2, hp: 18, r: 3 }, { a: 'đêm', b: 'cú', lv: 2, hp: 18, r: 4 }, { a: 'bóng tối', b: 'bóng tối', lv: 2, hp: 17, r: 5 },
-  ];
-  const show = s => {
-    $('#d-round').textContent = s.r; $('#d-lv').textContent = s.lv; $('#d-hp').textContent = s.hp;
-  };
-  if (reduce) { const s = script[1]; show(s); t1.textContent = s.a; t2.textContent = s.b; f1.classList.add('hit'); f2.classList.add('hit'); res.textContent = 'TRÙNG KHỚP! ⭐ Level up'; res.className = 'demo-res good'; return; }
+  ],
+  en: [
+    { a: 'ocean', b: 'mountain', seed: true, lv: 1, hp: 20, r: 1 }, { a: 'travel', b: 'travel', lv: 1, hp: 20, r: 2 },
+    { a: 'cat', b: 'moon', seed: true, lv: 2, hp: 18, r: 3 }, { a: 'night', b: 'owl', lv: 2, hp: 18, r: 4 }, { a: 'darkness', b: 'darkness', lv: 2, hp: 17, r: 5 },
+  ],
+};
+async function heroDemo() {
+  const f1 = $('#d1'), f2 = $('#d2'), res = $('#d-res'), t1 = f1.querySelector('.txt'), t2 = f2.querySelector('.txt');
+  const show = s => { $('#d-round').textContent = s.r; $('#d-lv').textContent = s.lv; $('#d-hp').textContent = s.hp; };
+  if (reduce) { const s = DEMO[S.lang][1]; show(s); t1.textContent = s.a; t2.textContent = s.b; f1.classList.add('hit'); f2.classList.add('hit'); res.textContent = t('matchRes'); res.className = 'demo-res good'; return; }
   for (;;) {
-    for (const s of script) {
+    const lang = S.lang;
+    for (const s of DEMO[lang]) {
       while (S.screen !== 'home' || document.hidden) await sleep(500);
+      if (S.lang !== lang) break;
       show(s); t1.textContent = ''; t2.textContent = ''; f1.className = 'kf'; f2.className = 'kf'; res.textContent = ''; res.className = 'demo-res';
       await sleep(500);
       if (s.seed) {
         t1.textContent = s.a; t2.textContent = s.b; f1.classList.add('seed'); f2.classList.add('seed');
-        res.textContent = '🎲 Từ khởi đầu ngẫu nhiên'; res.className = 'demo-res seed';
+        res.textContent = t('seedRes'); res.className = 'demo-res seed';
         await sleep(1900); continue;
       }
       const a = [...s.a], b = [...s.b], n = Math.max(a.length, b.length);
@@ -1402,7 +1556,7 @@ async function heroDemo() {
       await sleep(450);
       const ok = s.a === s.b;
       f1.classList.add(ok ? 'hit' : 'off'); f2.classList.add(ok ? 'hit' : 'off');
-      res.textContent = ok ? 'TRÙNG KHỚP! ⭐ Level up' : '💔 Lệch từ · -1 mạng';
+      res.textContent = ok ? t('matchRes') : t('missRes');
       res.className = 'demo-res ' + (ok ? 'good' : 'bad');
       await sleep(ok ? 1900 : 1400);
     }
@@ -1410,7 +1564,10 @@ async function heroDemo() {
 }
 
 // ---------- boot ----------
+applyStatic();
 buildHomeStatic();
+$('#name-in').value = S.name;
+{ const h = (location.hash || '').replace('#', '').toUpperCase(); if (/^[A-Z0-9]{4}$/.test(h)) $('#join-code').value = h; }
 render();
 startBg();
 heroDemo();
@@ -1420,6 +1577,5 @@ requestAnimationFrame(uiLoop);
 initNet();
 })();
 </script>
-
 </body>
 </html>

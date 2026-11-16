@@ -59,7 +59,7 @@ wss.on('connection', (ws, req) => {
   ws.rooms = new Set();
   ws.alive = true;
   clients.set(ws.id, ws);
-  ws.send(JSON.stringify({ t: 'hello', id: ws.id }));
+  ws.send(JSON.stringify({ t: 'hello', id: ws.id, now: Date.now() }));
 
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', raw => {
@@ -88,6 +88,16 @@ wss.on('connection', (ws, req) => {
     if (clients.get(ws.id) === ws) clients.delete(ws.id);
   });
 });
+
+// Nhịp đồng hồ chung cho các phòng chơi: mang giờ máy chủ để mọi người đếm ngược giống nhau,
+// và đánh thức tab chủ phòng kể cả khi tab đó đang ẩn (trình duyệt làm chậm bộ hẹn giờ của tab ẩn).
+setInterval(() => {
+  const msg = JSON.stringify({ t: 'tick', now: Date.now() });
+  for (const [name, room] of rooms) {
+    if (name === '__lobby') continue;
+    for (const v of room.values()) if (v.ws.readyState === 1) v.ws.send(msg);
+  }
+}, 500);
 
 // Ngắt các kết nối "chết" để người rời mạng biến khỏi phòng.
 setInterval(() => {
