@@ -62,6 +62,9 @@ button,input{font:inherit;color:inherit}
 .lang{display:inline-flex;padding:3px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line)}
 .lang button{border:0;background:transparent;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:800;letter-spacing:.06em;color:var(--mute);cursor:pointer}
 .lang button[aria-pressed="true"]{background:var(--sun);color:#1d1505}
+.stream{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);font-size:12.5px;font-weight:800;letter-spacing:.04em;color:var(--mute);cursor:pointer}
+.stream[aria-pressed="true"]{background:var(--rose);border-color:var(--rose);color:#1f0710}
+.masked{-webkit-text-security:disc}
 .pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);font-size:12.5px;color:var(--mute);white-space:nowrap;backdrop-filter:blur(6px)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
 .dot.on{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}
@@ -353,6 +356,7 @@ tr.seedrow td{color:var(--lilac)}
       <span>1<span class="w">Word</span>Away</span>
     </button>
     <div class="top-right">
+      <button class="stream" data-act="streamer" id="stream-btn" aria-pressed="false">🙈 Streamer</button>
       <div class="lang" role="group" aria-label="Language">
         <button data-act="lang" data-v="vi" aria-pressed="false">VI</button>
         <button data-act="lang" data-v="en" aria-pressed="false">EN</button>
@@ -482,7 +486,7 @@ const T = {
     modes: { coop2: ['Cặp đôi', '2 người cùng nhập'], vs22: ['Đấu đôi 2v2', 'Cặp nào nhập trùng trước thì thắng'], coop3: ['Bộ ba', '3 người cùng nhập'] },
     types: { free: ['Không chủ đề', 'Chế độ chính, nhập gì cũng được'], rand: ['Chủ đề ngẫu nhiên', 'Mỗi level một chủ đề chung'], turn: ['Luân phiên chọn', 'Mỗi vòng một người ra đề'] },
     lvtag: '⭐ 10 level · ❤️ 20 mạng', race: 'Đua tốc độ', searching: '{n} đang tìm',
-    online: '{n} người đang online', connecting: 'Đang kết nối…', reconnecting: 'Đang nối lại…', offline: 'Ngoại tuyến',
+    connected: 'Đã kết nối', streamerTip: 'Chế độ streamer: che các từ bằng dấu *', connecting: 'Đang kết nối…', reconnecting: 'Đang nối lại…', offline: 'Ngoại tuyến',
     bannerWake: '<b>Đang kết nối máy chủ…</b> Nếu lâu không có ai chơi, máy chủ miễn phí cần khoảng 30 đến 60 giây để thức dậy.',
     qTitle: 'Đang tìm đồng đội…', cancel: 'Huỷ tìm',
     loadingRoom: 'Đang vào phòng…', codeLbl: 'Mã phòng', codeHint: 'Gửi mã này cho bạn bè để vào cùng phòng', copy: 'Sao chép mã',
@@ -539,7 +543,7 @@ const T = {
     modes: { coop2: ['Duo', '2 players type together'], vs22: ['2v2 Battle', 'First pair to match wins'], coop3: ['Trio', '3 players type together'] },
     types: { free: ['No topic', 'Main mode, anything goes'], rand: ['Random topic', 'A shared topic each level'], turn: ['Take turns', 'Each round someone sets the topic'] },
     lvtag: '⭐ 10 levels · ❤️ 20 lives', race: 'Speed race', searching: '{n} searching',
-    online: '{n} online', connecting: 'Connecting…', reconnecting: 'Reconnecting…', offline: 'Offline',
+    connected: 'Connected', streamerTip: 'Streamer mode: hide words with *', connecting: 'Connecting…', reconnecting: 'Reconnecting…', offline: 'Offline',
     bannerWake: '<b>Connecting to the server…</b> If nobody has played for a while, the free server needs 30 to 60 seconds to wake up.',
     qTitle: 'Finding teammates…', cancel: 'Cancel',
     loadingRoom: 'Joining room…', codeLbl: 'Room code', codeHint: 'Send this code to friends so they can join', copy: 'Copy code',
@@ -618,13 +622,15 @@ const store = {
   set(k, v) { try { localStorage.setItem('dt_' + k, JSON.stringify(v)); } catch {} },
 };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// streamer mode: every entered word (and the room code) shows as * so viewers of a stream can't read it
+const mask = w => (S.streamer && w ? '*'.repeat(Math.min([...String(w)].length, 12)) : w);
 let toastT;
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
 
 // ---------- state ----------
 const S = {
   lang: LANGS.includes(store.get('lang', '')) ? store.get('lang', '') : ((navigator.language || '').toLowerCase().startsWith('vi') ? 'vi' : 'en'),
-  name: '', mode: store.get('mode', 'coop2'), type: store.get('type', 'free'),
+  name: '', mode: store.get('mode', 'coop2'), type: store.get('type', 'free'), streamer: !!store.get('streamer', false),
   screen: 'home', net: 'connecting', lobby: null, connected: undefined,
   room: null, roomName: '', roomKind: '', roomJoinAt: 0, ja: 0, joining: false,
   seeking: null, qStart: 0,
@@ -1039,6 +1045,7 @@ document.addEventListener('click', e => {
   switch (act) {
     case 'home': if (!S.room && !S.seeking) { S.screen = 'home'; render(); } break;
     case 'lang': setLang(v); break;
+    case 'streamer': S.streamer = !S.streamer; store.set('streamer', S.streamer); applyStreamer(); S.keys = {}; render(); break;
     case 'mode': S.mode = v; store.set('mode', v); render(); break;
     case 'type': S.type = v; store.set('type', v); render(); break;
     case 'seek': startSeek(); break;
@@ -1074,6 +1081,16 @@ $('#name-in').addEventListener('input', e => {
 });
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
+// inputs hide their letters too; browsers without -webkit-text-security fall back to a password field
+function applyStreamer() {
+  const b = $('#stream-btn'); b.setAttribute('aria-pressed', S.streamer); b.title = t('streamerTip');
+  const css = CSS.supports('-webkit-text-security', 'disc');
+  for (const id of ['#word-in', '#join-code']) {
+    const el = $(id); el.classList.toggle('masked', S.streamer);
+    if (!css) el.type = S.streamer ? 'password' : 'text';
+  }
+}
+
 // ---------- static text ----------
 function applyStatic() {
   document.documentElement.lang = S.lang;
@@ -1081,6 +1098,7 @@ function applyStatic() {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll('[data-act="lang"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.lang));
   $('#rules-list').innerHTML = t('rules').map(x => `<li>${x}</li>`).join('');
+  applyStreamer();
 }
 const glyphMode = {
   coop2: '<svg class="gl" viewBox="0 0 52 40"><circle cx="19" cy="20" r="13" fill="var(--tang)"/><circle cx="33" cy="20" r="13" fill="var(--sky)"/></svg>',
@@ -1118,10 +1136,7 @@ function render() {
 function renderTop() {
   const dot = $('#net-dot'), txt = $('#net-txt');
   dot.className = 'dot';
-  if (S.net === 'online' && S.connected) {
-    const n = S.lobby ? S.lobby.peers().length : 0;
-    dot.classList.add('on'); txt.textContent = t('online', { n });
-  } else if (S.net === 'online' && S.connected === false) { dot.classList.add('warn'); txt.textContent = t('reconnecting'); }
+  if (S.net === 'online' && S.connected) { dot.classList.add('on'); txt.textContent = t('connected'); } else if (S.net === 'online' && S.connected === false) { dot.classList.add('warn'); txt.textContent = t('reconnecting'); }
   else if (S.net === 'offline') { dot.classList.add('off'); txt.textContent = t('offline'); }
   else txt.textContent = t('connecting');
   const b = S.net === 'online' && !S.connected ? `<div class="banner">${t('bannerWake')}</div>` : '';
@@ -1165,7 +1180,7 @@ function renderRoom() {
   }
   const ready = m.teams === 1 || G.auto ? ps.length >= m.n : [0, 1].every(i => ps.filter(p => (p.presence.team | 0) === i).length >= 2);
   const head = S.roomKind === 'custom'
-    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(c)}</span>`).join('')}</div><div><div style="font-weight:700">${t('codeLbl')}</div><div class="muted" style="font-size:13.5px">${t('codeHint')}</div><button class="btn sm" data-act="copy" style="margin-top:8px">${t('copy')}</button></div></div>`
+    ? `<div class="code-box"><div class="code">${[...code].map(c => `<span>${esc(S.streamer ? '*' : c)}</span>`).join('')}</div><div><div style="font-weight:700">${t('codeLbl')}</div><div class="muted" style="font-size:13.5px">${t('codeHint')}</div><button class="btn sm" data-act="copy" style="margin-top:8px">${t('copy')}</button></div></div>`
     : `<div><div style="font-family:var(--f-display);font-size:26px;font-weight:800">${ps.length >= m.n ? t('matched') : t('gathering')}</div><div class="muted">${G.id === 0 ? t('autoStart') : t('hostNext')}</div></div>`;
   const md = t('modes'), ty = t('types');
   const seg = (act, keys, names, cur) => `<div class="seg">${keys.map(k => `<button class="chip" data-act="${act}" data-v="${k}" aria-pressed="${k === cur}" ${host && !G.auto ? '' : 'disabled'}>${names[k][0]}</button>`).join('')}</div>`;
@@ -1257,7 +1272,7 @@ function arenaHTML(G, ti) {
       slotOf = (p, i) => {
         const w = ws[i];
         if (hideTyped && !isSeed) return '<div class="wc"><div class="w wait">•••</div></div>';
-        if (typeof w === 'string' && w) return `<div class="wc"><div class="w">${esc(w)}</div></div>`;
+        if (typeof w === 'string' && w) return `<div class="wc"><div class="w">${esc(mask(w))}</div></div>`;
         return `<div class="wc"><div class="w wait">${tm.res === 'timeout' ? '—' : '…'}</div></div>`;
       };
     } else {
@@ -1287,7 +1302,7 @@ function renderGame() {
   const ti = dispTeam(), mt = myTeam(), me = myPeer();
   const m = MODES[G.mode]; const vs = m.teams > 1;
   setHTML($('#g-meta'), 'meta', [
-    S.roomKind === 'custom' ? `<span class="pill">${t('metaRoom')} <b style="color:var(--ink);font-family:var(--f-mono)">${esc(S.roomName.slice(2).toUpperCase())}</b></span>` : `<span class="pill">${t('metaQuick')}</span>`,
+    S.roomKind === 'custom' ? `<span class="pill">${t('metaRoom')} <b style="color:var(--ink);font-family:var(--f-mono)">${esc(mask(S.roomName.slice(2).toUpperCase()))}</b></span>` : `<span class="pill">${t('metaQuick')}</span>`,
     `<span class="pill">${t('modes')[G.mode][0]}</span>`, `<span class="pill">${t('types')[G.type][0]}</span>`,
     `<span class="pill">${roomLang().toUpperCase()}</span>`,
     mt < 0 ? `<span class="pill">${t('watching')}</span>` : '',
@@ -1314,10 +1329,10 @@ function renderGame() {
       const locked = S.my.lock && S.my.lock.r === tm.r;
       const prev = tm.seeds && tm.seeds[tm.r - 1];
       if (mt < 0) noteHtml = t('watchNote');
-      else if (locked) noteHtml = t('lockedNote', { w: esc(S.pending ? S.pending.w : '') });
+      else if (locked) noteHtml = t('lockedNote', { w: esc(mask(S.pending ? S.pending.w : '')) });
       else {
         showWord = true;
-        noteHtml = prev ? t('linkNote', { a: prev.map(esc).join(t('linkJoin')) }) : t('againNote');
+        noteHtml = prev ? t('linkNote', { a: prev.map(w => esc(mask(w))).join(t('linkJoin')) }) : t('againNote');
       }
     } else if (tm.ph === 'pick') {
       const iAmPicker = picker === me;
@@ -1351,7 +1366,7 @@ function histTable(ti, hide) {
     const ws = roundWords(ti, r); const seed = !!(tm.seeds && tm.seeds[r]);
     const match = !seed && ws.every(w => w) && ws.every(w => norm(w) === norm(ws[0]));
     const lv = coop && G.rl ? G.rl[r - 1] : null;
-    const cell = w => (hide && !seed) ? '•••' : (w ? esc(w) : '<span style="color:var(--dim)">—</span>');
+    const cell = w => (hide && !seed) ? '•••' : (w ? esc(mask(w)) : '<span style="color:var(--dim)">—</span>');
     const c = `<td class="c">${r}${lv ? ' · ' + (lv === MAX_LV ? '👑' : 'Lv' + lv) : ''} ${seed ? '🎲' : match ? '⭐' : (coop ? '💔' : '')}</td>`;
     rows += `<tr class="${match ? 'match' : ''} ${seed ? 'seedrow' : ''}">` + (two ? `<td class="l">${cell(ws[0])}</td>${c}<td>${cell(ws[1])}</td>` : c + ws.map(w => `<td>${cell(w)}</td>`).join('')) + '</tr>';
   }
@@ -1382,7 +1397,7 @@ function renderOver() {
     const rounds = tm ? tm.r : 0;
     if (G.why === 'clear') {
       html = `<div class="big-emoji">🏆</div><div class="verdict good">${t('clearT')}</div>
-        <p class="muted" style="margin:0">${t('clearBody', { n: m.n, w: esc(wordsOf(G.members[0][0])[rounds - 1] || '') })}</p>
+        <p class="muted" style="margin:0">${t('clearBody', { n: m.n, w: esc(mask(wordsOf(G.members[0][0])[rounds - 1] || '')) })}</p>
         <div class="title-badge"><small>${t('titleUnlocked')}</small><b>${t('TITLE')}</b></div>
         <div class="stats"><div><b>${rounds}</b>${t('statRounds')}</div><div><b>${G.hp}</b>${t('statLives')}</div></div>
         <div class="acts">${S.amHost ? `<button class="btn gold" data-act="restart">${t('restart')}</button>` : waitTxt}${leaveBtn}</div>`;
