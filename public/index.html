@@ -309,6 +309,9 @@ button,input{font:inherit;color:inherit}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:480px}
 .note{color:var(--mute);font-size:14.5px;max-width:48ch}
 .note b{color:var(--ink)}
+.word-err{max-width:460px;width:100%;padding:10px 14px;border-radius:13px;background:color-mix(in srgb,var(--bad) 14%,var(--bg-2));border:1px solid color-mix(in srgb,var(--bad) 55%,var(--line));color:#ffd0d0;font-size:14.5px;font-weight:600;text-align:center}
+.word-err b{color:#fff}
+.word-err small{color:color-mix(in srgb,#ffd0d0 75%,transparent);font-weight:500;font-size:12.5px}
 .shake{animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
@@ -447,6 +450,7 @@ tr.seedrow td{color:var(--lilac)}
           <input id="pick-in" class="inp" maxlength="32" autocomplete="off" data-i18n-ph="topicPh" aria-label="Topic">
           <button class="btn primary" data-i18n="setTopic"></button>
         </form>
+        <div class="word-err" id="word-err" role="alert" hidden></div>
         <div class="chips" id="pick-sugg" hidden></div>
         <div class="note" id="g-note"></div>
       </div>
@@ -481,7 +485,7 @@ const T = {
       '<b>2v2:</b> hai cặp chơi song song, cặp nào nhập trùng trước thì thắng. Cặp nào để hết giờ thì thua luôn.',
       '<b>Chủ đề ngẫu nhiên:</b> mỗi level một chủ đề mới. <b>Luân phiên chọn:</b> đầu mỗi vòng một người ra đề (20 giây).',
       '<b>Ghép trận ngẫu nhiên chỉ ghép người cùng ngôn ngữ.</b> Phòng riêng dùng ngôn ngữ của chủ phòng cho từ ngẫu nhiên và chủ đề.',
-      'Trong cùng một level không nhập lại từ đã xuất hiện. Không phân biệt hoa thường, có phân biệt dấu: "cá" khác "ca".',
+      '<b>Mỗi ván không được lặp từ, kể cả từng tiếng.</b> Đã có "con chó" thì không nhập "con chó", "chó", "con" hay "con mèo". Đã có "chó" thì không nhập "con chó". Không phân biệt hoa thường, có phân biệt dấu: "cá" khác "ca".',
     ],
     modes: { coop2: ['Cặp đôi', '2 người cùng nhập'], vs22: ['Đấu đôi 2v2', 'Cặp nào nhập trùng trước thì thắng'], coop3: ['Bộ ba', '3 người cùng nhập'] },
     types: { free: ['Không chủ đề', 'Chế độ chính, nhập gì cũng được'], rand: ['Chủ đề ngẫu nhiên', 'Mỗi level một chủ đề chung'], turn: ['Luân phiên chọn', 'Mỗi vòng một người ra đề'] },
@@ -521,7 +525,8 @@ const T = {
     teamWins: '{t} thắng', youWin: 'Đội bạn thắng!', theyWin: 'Đội kia nhanh hơn', howMatch: 'nhập trùng sau {r} vòng', howTimeout: 'vì đội kia để hết giờ',
     yourTimeout: 'Đội bạn để hết giờ.', newGame: 'Chơi ván mới',
     notConnected: 'Chưa kết nối được phòng chơi', busy: 'Máy chủ đang bận, thử lại sau ít giây', cantJoin: 'Không vào được phòng', lost: 'Mất kết nối phòng',
-    needPlayers: 'Cần đủ {n} người', teamsOf2: 'Mỗi đội cần đúng 2 người', used: '"{w}" đã xuất hiện rồi, chọn từ khác nhé', code4: 'Mã phòng gồm 4 ký tự', anon: 'Ẩn danh',
+    needPlayers: 'Cần đủ {n} người', teamsOf2: 'Mỗi đội cần đúng 2 người', usedSame: 'Không được nhập: <b>"{w}"</b> đã xuất hiện trong ván này.', usedWhole: 'Không được nhập: từ <b>"{p}"</b> đã xuất hiện trong ván này.', usedPart: 'Không được nhập: tiếng <b>"{p}"</b> đã có trong <b>"{w}"</b>.',
+    usedRule: 'Mỗi ván không được dùng lại từ đã xuất hiện, kể cả từng tiếng trong đó.', code4: 'Mã phòng gồm 4 ký tự', anon: 'Ẩn danh',
     seedRes: '🎲 Từ khởi đầu ngẫu nhiên', matchRes: 'TRÙNG KHỚP! ⭐ Level up', missRes: '💔 Lệch từ · -1 mạng', someone: 'Ai đó',
   },
   en: {
@@ -538,7 +543,7 @@ const T = {
       '<b>2v2:</b> two pairs play side by side; the first pair to match wins. A pair that runs out of time loses.',
       '<b>Random topic:</b> a new shared topic each level. <b>Take turns:</b> each round one player sets the topic (20 seconds).',
       '<b>Quick match only pairs players who chose the same language.</b> Private rooms use the host\'s language for random words and topics.',
-      'Within a level, a word can\'t be reused. Capitals don\'t matter.',
+      '<b>No repeats in a game, not even parts of words.</b> After "ice cream" you can\'t type "ice cream", "ice", "cream" or "ice cube". After "ice" you can\'t type "ice cream". Capitals don\'t matter.',
     ],
     modes: { coop2: ['Duo', '2 players type together'], vs22: ['2v2 Battle', 'First pair to match wins'], coop3: ['Trio', '3 players type together'] },
     types: { free: ['No topic', 'Main mode, anything goes'], rand: ['Random topic', 'A shared topic each level'], turn: ['Take turns', 'Each round someone sets the topic'] },
@@ -578,7 +583,8 @@ const T = {
     teamWins: '{t} wins', youWin: 'Your team wins!', theyWin: 'The other team was faster', howMatch: 'matched after {r} rounds', howTimeout: 'because the other team ran out of time',
     yourTimeout: 'Your team ran out of time.', newGame: 'New game',
     notConnected: 'Not connected yet', busy: 'Server busy, try again shortly', cantJoin: 'Couldn\'t join the room', lost: 'Lost connection to the room',
-    needPlayers: 'Needs {n} players', teamsOf2: 'Each team needs exactly 2 players', used: '"{w}" was already used, pick another', code4: 'Room codes have 4 characters', anon: 'Anonymous',
+    needPlayers: 'Needs {n} players', teamsOf2: 'Each team needs exactly 2 players', usedSame: 'Not allowed: <b>"{w}"</b> already appeared in this game.', usedWhole: 'Not allowed: <b>"{p}"</b> already appeared in this game.', usedPart: 'Not allowed: <b>"{p}"</b> is already part of <b>"{w}"</b>.',
+    usedRule: 'In one game you can\'t reuse a word that appeared, or any part of it.', code4: 'Room codes have 4 characters', anon: 'Anonymous',
     seedRes: '🎲 Random starting words', matchRes: 'MATCH! ⭐ Level up', missRes: '💔 No match · -1 life', someone: 'Someone',
   },
 };
@@ -745,13 +751,23 @@ function wordsOf(peer) {
   if (peer === myPeer()) return S.my.words;
   const p = pres(peer); return (S.G && p.wg === S.G.id && Array.isArray(p.words)) ? p.words : [];
 }
+// every word that has appeared for this team in this game (typed words and random starting words)
 function usedWords(ti) {
   const set = new Set(); const G = S.G; if (!G || !G.members[ti]) return set;
-  const from = isCoop(G) ? (G.lvStart || 1) : 1;
-  for (const m of G.members[ti]) wordsOf(m).forEach((w, i) => { if (w && i + 1 >= from) set.add(norm(w)); });
+  for (const m of G.members[ti]) wordsOf(m).forEach(w => { if (w) set.add(norm(w)); });
   const tm = G.teams && G.teams[ti];
-  if (tm && tm.seeds) for (const r in tm.seeds) if (+r >= from) tm.seeds[r].forEach(w => set.add(norm(w)));
+  if (tm && tm.seeds) for (const r in tm.seeds) tm.seeds[r].forEach(w => set.add(norm(w)));
   return set;
+}
+// a word is split into its parts ("con chó" → con, chó); a new word may not share any part with a used word
+const parts = w => norm(w).split(/[\s\-_.,/]+/).filter(Boolean);
+function clash(ti, w) {
+  const mine = parts(w);
+  for (const u of usedWords(ti)) {
+    const hit = mine.find(p => parts(u).includes(p));
+    if (hit) return { part: hit, word: u };
+  }
+  return null;
 }
 // the words shown for round r: random seeds for opening rounds, otherwise each member's typed word
 function roundWords(ti, r) {
@@ -1010,7 +1026,12 @@ function submitWord() {
   const tm = G.teams[ti]; if (tm.ph !== 'word' || (S.my.lock && S.my.lock.r === tm.r)) return;
   const w = norm(inp.value);
   if (!w) { bump(inp); return; }
-  if (usedWords(ti).has(w)) { bump(inp); toast(t('used', { w })); return; }
+  const c = clash(ti, w);
+  if (c) {
+    const msg = c.word === w ? t('usedSame', { w: esc(w) }) : (c.part === c.word ? t('usedWhole', { p: esc(c.part) }) : t('usedPart', { p: esc(c.part), w: esc(c.word) }));
+    showWordErr(msg); bump(inp); return;
+  }
+  showWordErr('');
   S.pending = { r: tm.r, w };
   S.my.lock = { g: G.id, r: tm.r, h: hash(w + '|' + S.roomName + '|' + G.id + '|' + ti + '|' + tm.r) };
   pub({ lock: S.my.lock }); inp.value = ''; render();
@@ -1022,6 +1043,7 @@ function submitPick(v) {
   pub({ pick: { g: G.id, r: tm.r, t: topic } }); $('#pick-in').value = '';
   S.keys.picked = G.id + '|' + tm.r; render();
 }
+function showWordErr(html) { const el = $('#word-err'); el.innerHTML = html ? `⛔ ${html}<br><small>${t('usedRule')}</small>` : ''; el.hidden = !html; }
 function bump(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); el.focus(); }
 function makeCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.random() * A.length | 0]; return s; }
 
@@ -1077,6 +1099,7 @@ $('#name-in').addEventListener('input', e => {
   S.name = e.target.value.trim().slice(0, 18) || t('anon'); store.set('name', S.name);
   S.lobby && S.lobby.presence({ name: S.name }).catch(() => {});
 });
+$('#word-in').addEventListener('input', () => showWordErr(''));
 $('#join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 
 // streamer mode hides only the letters you are typing in the word box; revealed words stay visible.
@@ -1343,6 +1366,7 @@ function renderGame() {
   }
   const wasHidden = wf.hidden;
   wf.hidden = !showWord; pf.hidden = !showPick; sg.hidden = !showPick;
+  if (!showWord && !$('#word-err').hidden) showWordErr('');
   // the next round opens the input again and puts the cursor in it
   if (showWord && wasHidden && S.screen === 'game') setTimeout(() => $('#word-in').focus(), 30);
   if (note.innerHTML !== noteHtml) note.innerHTML = noteHtml;
