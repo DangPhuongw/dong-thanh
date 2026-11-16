@@ -501,7 +501,7 @@ const T = {
     readyGo: 'Đủ người rồi, bắt đầu thôi.', needN: 'Cần {n} người', perTeam: ', mỗi đội 2', waitHost: 'Chờ <b>{h}</b> bắt đầu…', start: 'Bắt đầu',
     hostTag: 'Chủ phòng', youTag: 'Bạn', roomLang: 'Ngôn ngữ phòng: <b>{l}</b>. Từ ngẫu nhiên và chủ đề dùng ngôn ngữ này.',
     langName: { vi: 'Tiếng Việt', en: 'Tiếng Anh' },
-    teams: ['Đội Cam', 'Đội Lam'], yourTeam: 'Đội bạn',
+    teams: ['Đội Cam', 'Đội Lam'], yourTeam: 'Đội của bạn',
     metaRoom: 'Phòng', metaQuick: 'Ghép ngẫu nhiên', watching: 'Đang xem',
     prep: 'Chuẩn bị', round: 'Vòng {n}', seedTag: ' · 🎲 Từ khởi đầu', topicIs: 'Chủ đề: ',
     turnPrep: 'Mỗi vòng một người ra đề', coopPrep: '⭐ Level 1 · ❤️ 20 mạng', noTopicPrep: 'Không chủ đề',
@@ -509,7 +509,7 @@ const T = {
     ready: 'Sẵn sàng', choosing: '✍️ Đang ra đề', waitTopic: 'Chờ đề', locked: '✓ Đã chốt', typing: 'Đang nhập', youSuffix: ' (bạn)',
     seedV: 'Từ khởi đầu', seedSub: 'Vòng sau: tìm một từ nối các từ này', match: 'TRÙNG KHỚP!', clear: 'PHÁ ĐẢO!', miss: 'Lệch từ rồi!', timeout: 'Hết giờ!',
     upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Vượt qua Level 10!', hurtSub: '💔 -1 mạng · còn {h}', deadSub: '💀 Hết mạng!', missSub: 'Vòng sau bắt sóng lại!',
-    nextIn: 'Vòng mới sau {s} giây',
+    nextIn: 'Vòng mới sau {s} giây', commonWord: 'Từ chung: "{w}"',
     prepNote: 'Đặt tay lên bàn phím. Vòng đầu sẽ mở bằng từ ngẫu nhiên.', seedNote: 'Ghi nhớ các từ này. Vòng sau hãy nhập một từ liên quan tới tất cả.',
     watchNote: 'Bạn đang xem trận này.', lockedNote: 'Đã chốt <b>{w}</b>. Đang chờ đồng đội…', lockedHidden: 'Đã chốt từ. Đang chờ đồng đội…', linkNote: 'Nối <b>{a}</b> bằng một từ chung.', linkJoin: '</b> với <b>',
     againNote: 'Nhìn các từ vòng trước, đoán xem đồng đội sẽ nhập gì.', missNote: 'Chưa trùng. Đồng hồ sẽ tự chạy lại sau vài giây, chuẩn bị nhập từ mới.',
@@ -522,8 +522,8 @@ const T = {
     clearT: 'PHÁ ĐẢO TOÀN DIỆN!', clearBody: 'Cả {n} người vượt qua 10 level, chốt hạ bằng từ <b>{w}</b>.', titleUnlocked: 'Danh hiệu mở khoá', TITLE: 'Thần Giao Cách Cảm Tối Thượng',
     statRounds: 'vòng', statLives: 'mạng còn lại', restart: 'Chơi lại từ Level 1', restart20: 'Chơi lại từ Level 1 (❤️ 20)',
     deadBody: 'Hết mạng ở <b>{l}</b> sau {r} vòng. {who} phải dừng bước tại đây.', who2: 'Hai bạn', who3: 'Cả ba bạn', statLv: 'level đã qua', statPlayed: 'vòng đã chơi',
-    teamWins: '{t} thắng', youWin: 'Đội bạn thắng!', theyWin: 'Đội kia nhanh hơn', howMatch: 'nhập trùng sau {r} vòng', howTimeout: 'vì đội kia để hết giờ',
-    yourTimeout: 'Đội bạn để hết giờ.', newGame: 'Chơi ván mới',
+    teamWins: '{t} thắng', youWin: 'Đội của bạn thắng!', theyWin: 'Đội kia nhanh hơn', howMatch: 'trùng khớp với từ <b>"{w}"</b> sau {r} vòng', howTimeout: 'vì đội kia để hết giờ',
+    yourTimeout: 'Đội của bạn để hết giờ.', newGame: 'Chơi ván mới',
     notConnected: 'Chưa kết nối được phòng chơi', busy: 'Máy chủ đang bận, thử lại sau ít giây', cantJoin: 'Không vào được phòng', lost: 'Mất kết nối phòng',
     needPlayers: 'Cần đủ {n} người', teamsOf2: 'Mỗi đội cần đúng 2 người', usedSame: 'Không được nhập: <b>"{w}"</b> đã xuất hiện trong ván này.', usedWhole: 'Không được nhập: từ <b>"{p}"</b> đã xuất hiện trong ván này.', usedPart: 'Không được nhập: tiếng <b>"{p}"</b> đã có trong <b>"{w}"</b>.',
     usedRule: 'Mỗi ván không được dùng lại từ đã xuất hiện, kể cả từng tiếng trong đó.', code4: 'Mã phòng gồm 4 ký tự', anon: 'Ẩn danh',
@@ -567,7 +567,7 @@ const T = {
     ready: 'Ready', choosing: '✍️ Choosing', waitTopic: 'Waiting', locked: '✓ Locked in', typing: 'Typing', youSuffix: ' (you)',
     seedV: 'Starting words', seedSub: 'Next: find one word linking these', match: 'MATCH!', clear: 'CLEARED!', miss: 'No match!', timeout: 'Time\'s up!',
     upSub: '⭐ LEVEL UP → Lv {l} · ❤️ {h}', clearSub: '🏆 Beat Level 10!', hurtSub: '💔 -1 life · {h} left', deadSub: '💀 Out of lives!', missSub: 'Sync up next round!',
-    nextIn: 'Next round in {s}s',
+    nextIn: 'Next round in {s}s', commonWord: 'Shared word: "{w}"',
     prepNote: 'Hands on the keyboard. The first round opens with random words.', seedNote: 'Remember these. Next round, type one word that relates to all of them.',
     watchNote: 'You are watching this game.', lockedNote: 'Locked in <b>{w}</b>. Waiting for your teammate…', lockedHidden: 'Word locked in. Waiting for your teammate…', linkNote: 'Link <b>{a}</b> with one word.', linkJoin: '</b> and <b>',
     againNote: 'Look at the last words and guess what your teammate will type.', missNote: 'No match yet. The timer restarts in a few seconds, get ready to type a new word.',
@@ -580,7 +580,7 @@ const T = {
     clearT: 'TOTAL VICTORY!', clearBody: 'All {n} players beat 10 levels, finishing on <b>{w}</b>.', titleUnlocked: 'Title unlocked', TITLE: 'Supreme Telepath',
     statRounds: 'rounds', statLives: 'lives left', restart: 'Play again from Level 1', restart20: 'Restart at Level 1 (❤️ 20)',
     deadBody: 'Out of lives at <b>{l}</b> after {r} rounds.', who2: '', who3: '', statLv: 'levels cleared', statPlayed: 'rounds played',
-    teamWins: '{t} wins', youWin: 'Your team wins!', theyWin: 'The other team was faster', howMatch: 'matched after {r} rounds', howTimeout: 'because the other team ran out of time',
+    teamWins: '{t} wins', youWin: 'Your team wins!', theyWin: 'The other team was faster', howMatch: 'matched on <b>"{w}"</b> after {r} rounds', howTimeout: 'because the other team ran out of time',
     yourTimeout: 'Your team ran out of time.', newGame: 'New game',
     notConnected: 'Not connected yet', busy: 'Server busy, try again shortly', cantJoin: 'Couldn\'t join the room', lost: 'Lost connection to the room',
     needPlayers: 'Needs {n} players', teamsOf2: 'Each team needs exactly 2 players', usedSame: 'Not allowed: <b>"{w}"</b> already appeared in this game.', usedWhole: 'Not allowed: <b>"{p}"</b> already appeared in this game.', usedPart: 'Not allowed: <b>"{p}"</b> is already part of <b>"{w}"</b>.',
@@ -1265,6 +1265,7 @@ function verdictHTML(G, tm, ti) {
     else if (tm.fx === 'hurt') sub = `<div class="vsub hurt">${t('hurtSub', { h: G.hp })}</div>`;
     else if (tm.fx === 'dead') sub = `<div class="vsub hurt">${t('deadSub')}</div>`;
   } else if (tm.res === 'miss') sub = `<div class="vsub">${t('missSub')}</div>`;
+  else if (tm.res === 'match') { const w = roundWords(ti, tm.r).find(x => x); if (w) sub = `<div class="vsub up">${t('commonWord', { w: esc(w) })}</div>`; }
   return v + sub + nx;
 }
 
@@ -1272,7 +1273,7 @@ function arenaHTML(G, ti) {
   const m = MODES[G.mode], coop = isCoop(G), vs = m.teams > 1, me = myPeer(), mt = myTeam();
   const mem = (G.members && G.members[ti]) || [];
   const tm = G.teams && G.teams[ti];
-  const hideTyped = vs && mt >= 0 && mt !== ti && G.st !== 'over';
+  const hideTyped = false; // 2v2: the other team's words show as soon as they are revealed
   let round = t('prep'), topic, topicNone = false, mid, seatsCls = '', slotOf;
   if (!tm || G.st === 'count') {
     topic = G.type === 'rand' && G.topic ? `${t('topicIs')}<span class="k">${esc(G.topic)}</span>` : (G.type === 'turn' ? t('turnPrep') : (coop ? t('coopPrep') : t('noTopicPrep')));
@@ -1398,7 +1399,7 @@ function renderHist() {
   const G = S.G, el = $('#g-hist');
   if (MODES[G.mode].teams === 1) { setHTML(el, 'hist', histTable(0, false)); return; }
   const mt = myTeam();
-  setHTML(el, 'hist', `<div class="hist-grid">${[0, 1].map(x => `<div><h4><span class="dot" style="background:var(--${TEAM_COLS[x]})"></span>${teamName(x)}</h4>${histTable(x, mt >= 0 && mt !== x && G.st !== 'over')}</div>`).join('')}</div>`);
+  setHTML(el, 'hist', `<div class="hist-grid">${[0, 1].map(x => `<div><h4><span class="dot" style="background:var(--${TEAM_COLS[x]})"></span>${teamName(x)}</h4>${histTable(x, false)}</div>`).join('')}</div>`);
 }
 
 function renderOver() {
@@ -1429,11 +1430,13 @@ function renderOver() {
         <div class="acts">${S.amHost ? `<button class="btn primary" data-act="restart">${t('restart20')}</button>` : waitTxt}${leaveBtn}</div>`;
     }
   } else {
-    const winTeam = G.win, how = G.why === 'match' ? t('howMatch', { r: G.teams[winTeam].r }) : t('howTimeout');
+    const winTeam = G.win, wt = G.teams[winTeam];
+    const winWord = G.why === 'match' ? (roundWords(winTeam, wt.r).find(w => w) || '') : '';
+    const how = G.why === 'match' ? t('howMatch', { r: wt.r, w: esc(winWord) }) : t('howTimeout');
     let title, cls, sub;
     if (mt < 0) { title = t('teamWins', { t: teamName(winTeam) }); cls = 'good'; sub = `${teamName(winTeam)} ${how}.`; }
     else if (mt === winTeam) { title = t('youWin'); cls = 'good'; sub = `${t('yourTeam')} ${how}.`; }
-    else { title = t('theyWin'); cls = 'bad'; sub = G.why === 'match' ? `${teamName(winTeam)} ${t('howMatch', { r: G.teams[winTeam].r })}.` : t('yourTimeout'); }
+    else { title = t('theyWin'); cls = 'bad'; sub = G.why === 'match' ? `${teamName(winTeam)} ${how}.` : t('yourTimeout'); }
     html = `<div class="big-emoji">${cls === 'good' ? '🎉' : '😵'}</div><div class="verdict ${cls}">${title}</div><p class="muted" style="margin:0">${sub}</p>
       <div class="acts">${S.amHost ? `<button class="btn primary" data-act="again">${t('newGame')}</button>` : waitTxt}${leaveBtn}</div>`;
     if (cls === 'good') celebrate = 'confetti';
